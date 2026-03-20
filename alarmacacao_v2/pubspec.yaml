@@ -1,0 +1,51 @@
+name: alarmacacao5_0
+description: "Un nuevo proyecto Flutter."
+publish_to: 'none' # Evita publicación en pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.8.1 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 🖼️ Íconos y UI
+  cupertino_icons: ^1.0.8
+
+  # 📦 Persistencia y manejo de archivos
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.2
+  csv: ^6.0.0
+
+  # 🔄 Utilidades generales
+  uuid: ^4.4.0
+  intl: ^0.20.2
+  share_plus: ^11.0.0
+  http: ^1.2.0
+
+  # 🌐 Geolocalización y permisos
+  geolocator: ^10.1.0
+  permission_handler: ^12.0.1
+
+  # 🎥 Multimedia
+  video_player: ^2.8.2
+
+  # 🔔 Notificaciones y zonas horarias
+  flutter_local_notifications: ^19.4.0
+  timezone: ^0.10.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/images/fondo_clima.jpg
+    - assets/videos/
+    - assets/sonido/
