@@ -42,7 +42,11 @@ class CurvaLoteChart extends StatelessWidget {
     }
 
     final minX = temp.first.x < 0 ? temp.first.x : 0.0;
-    final maxX = temp.last.x <= minX ? minX + 1 : temp.last.x;
+    final ultimo = temp.last.x <= minX ? minX + 1 : temp.last.x;
+    // Margen a la derecha para que el último punto no quede cortado.
+    final maxX = ultimo + (ultimo - minX) * 0.04;
+    // Marcas del eje X cada 24 h (o cada 6 h en ciclos cortos) para que no se encimen.
+    final intervaloX = (maxX - minX) > 48 ? 24.0 : 6.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,6 +58,7 @@ class CurvaLoteChart extends StatelessWidget {
           color: oscuro ? _tempOscuro : _tempClaro,
           minX: minX,
           maxX: maxX,
+          intervaloX: intervaloX,
           mostrarEjeX: false,
         ),
         const SizedBox(height: 12),
@@ -64,6 +69,7 @@ class CurvaLoteChart extends StatelessWidget {
           color: oscuro ? _humOscuro : _humClaro,
           minX: minX,
           maxX: maxX,
+          intervaloX: intervaloX,
           mostrarEjeX: true,
           minY: 0,
           maxY: 100,
@@ -78,7 +84,7 @@ class _GraficaSerie extends StatelessWidget {
   final String unidad;
   final List<FlSpot> puntos;
   final Color color;
-  final double minX, maxX;
+  final double minX, maxX, intervaloX;
   final bool mostrarEjeX;
   final double? minY, maxY;
 
@@ -89,6 +95,7 @@ class _GraficaSerie extends StatelessWidget {
     required this.color,
     required this.minX,
     required this.maxX,
+    required this.intervaloX,
     required this.mostrarEjeX,
     this.minY,
     this.maxY,
@@ -146,10 +153,12 @@ class _GraficaSerie extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: mostrarEjeX,
                       reservedSize: 24,
-                      getTitlesWidget: (v, meta) => SideTitleWidget(
-                        meta: meta,
-                        child: Text('${v.round()} h', style: estiloEje),
-                      ),
+                      interval: intervaloX,
+                      getTitlesWidget: (v, meta) {
+                        // fl_chart agrega una marca en el extremo; solo se rotulan los múltiplos.
+                        if ((v % intervaloX).abs() > 0.01) return const SizedBox.shrink();
+                        return SideTitleWidget(meta: meta, child: Text('${v.round()} h', style: estiloEje));
+                      },
                     ),
                   ),
                 ),

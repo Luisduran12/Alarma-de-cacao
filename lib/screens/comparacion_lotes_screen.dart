@@ -84,11 +84,14 @@ class _ComparacionLotesScreenState extends State<ComparacionLotesScreen> {
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
+                              // Compacta para que las 4 columnas quepan en un teléfono.
+                              columnSpacing: 16,
+                              horizontalMargin: 12,
                               columns: const [
                                 DataColumn(label: Text('Calidad')),
                                 DataColumn(label: Text('Lotes'), numeric: true),
-                                DataColumn(label: Text('Temp. prom.'), numeric: true),
-                                DataColumn(label: Text('Hum. prom.'), numeric: true),
+                                DataColumn(label: Text('Temp.'), numeric: true, tooltip: 'Temperatura promedio'),
+                                DataColumn(label: Text('Humedad'), numeric: true, tooltip: 'Humedad promedio'),
                               ],
                               rows: [
                                 for (final c in _porCalidad)
