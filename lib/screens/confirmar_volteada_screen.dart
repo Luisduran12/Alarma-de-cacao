@@ -36,6 +36,9 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
   final _tempController = TextEditingController();
   final _humedadController = TextEditingController();
   final _observacionController = TextEditingController();
+  final _phController = TextEditingController();
+  final _brixController = TextEditingController();
+  final _tempAmbienteController = TextEditingController();
   final _loteService = LoteService();
 
   Lote? _lote;
@@ -60,6 +63,9 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
     _tempController.dispose();
     _humedadController.dispose();
     _observacionController.dispose();
+    _phController.dispose();
+    _brixController.dispose();
+    _tempAmbienteController.dispose();
     super.dispose();
   }
 
@@ -83,6 +89,9 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
         _tempController.text = base.temperatura.toString();
         _humedadController.text = base.humedad.toString();
         _observacionController.text = base.observacion;
+        _phController.text = base.ph?.toString() ?? '';
+        _brixController.text = base.brix?.toString() ?? '';
+        _tempAmbienteController.text = base.tempAmbiente?.toString() ?? '';
         _etapa = base.etapa;
         _latitud = base.latitud;
         _longitud = base.longitud;
@@ -137,6 +146,9 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
       etapa: _etapa,
       latitud: esSecado ? _latitud : null,
       longitud: esSecado ? _longitud : null,
+      ph: _numeroOpcional(_phController.text),
+      brix: _numeroOpcional(_brixController.text),
+      tempAmbiente: _numeroOpcional(_tempAmbienteController.text),
     );
 
     // Se actualiza el registro existente (no se duplica) o se agrega uno nuevo.
@@ -153,6 +165,20 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
       SnackBar(content: Text(completado ? '🎉 Todas las volteadas registradas' : '✅ Registro guardado')),
     );
     Navigator.pop(context, true);
+  }
+
+  /// Vacío = null (el campo es opcional). Acepta coma decimal.
+  static double? _numeroOpcional(String texto) {
+    final t = texto.trim().replaceAll(',', '.');
+    return t.isEmpty ? null : double.tryParse(t);
+  }
+
+  String? _validarOpcional(String? val, double min, double max) {
+    if (val == null || val.trim().isEmpty) return null;
+    final n = double.tryParse(val.trim().replaceAll(',', '.'));
+    if (n == null) return 'Valor inválido';
+    if (n < min || n > max) return 'Debe estar entre ${min.toInt()} y ${max.toInt()}';
+    return null;
   }
 
   String? _validarNumero(String? val, String nombre, double min, double max) {
@@ -197,7 +223,7 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
                         controller: _tempController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: const InputDecoration(
-                            labelText: 'Temperatura (°C)', border: OutlineInputBorder()),
+                            labelText: 'Temperatura de la masa (°C)', border: OutlineInputBorder()),
                         validator: (v) => _validarNumero(v, 'temperatura', -10, 80),
                       ),
                       const SizedBox(height: 16),
@@ -207,6 +233,31 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
                         decoration:
                             const InputDecoration(labelText: 'Humedad (%)', border: OutlineInputBorder()),
                         validator: (v) => _validarNumero(v, 'humedad', 0, 100),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _phController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(labelText: 'pH (opcional)', border: OutlineInputBorder()),
+                        validator: (v) => _validarOpcional(v, 0, 14),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _brixController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(labelText: '°Brix (opcional)', border: OutlineInputBorder()),
+                        validator: (v) => _validarOpcional(v, 0, 100),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _tempAmbienteController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Temperatura ambiente (°C, opcional)',
+                          helperText: 'La del aire del lugar, no la de la masa de cacao.',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (v) => _validarOpcional(v, -10, 60),
                       ),
                       const SizedBox(height: 16),
                       TextFormField(

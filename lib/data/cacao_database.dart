@@ -8,12 +8,14 @@ import 'migracion_prefs.dart';
 /// Tablas:
 ///  - lotes:     un lote de cacao en beneficio.
 ///  - registros: volteadas programadas y datos medidos (fecha, temperatura,
-///               humedad, observación, latitud, longitud, etapa).
+///               humedad, observación, latitud, longitud, etapa y, opcionales,
+///               pH, Brix y temperatura ambiente).
 class CacaoDatabase {
   static const String nombreArchivo = 'cacao_light.db';
   /// v1: tablas lotes y registros.
   /// v2: resultado del grano en lotes (calidad_resultado, observacion_resultado).
-  static const int version = 2;
+  /// v3: pH, Brix y temperatura ambiente opcionales en registros.
+  static const int version = 3;
 
   static Future<Database>? _instancia;
 
@@ -39,6 +41,7 @@ class CacaoDatabase {
         onCreate: (db, _) => crearTablas(db),
         onUpgrade: (db, anterior, _) async {
           if (anterior < 2) await _agregarResultado(db);
+          if (anterior < 3) await _agregarMedidasOpcionales(db);
         },
       ),
     );
@@ -72,10 +75,20 @@ class CacaoDatabase {
         longitud          REAL,
         etapa             TEXT NOT NULL DEFAULT 'fermentacion',
         confirmada        INTEGER NOT NULL DEFAULT 0,
-        notif_id          INTEGER NOT NULL DEFAULT 0
+        notif_id          INTEGER NOT NULL DEFAULT 0,
+        ph                REAL,
+        brix              REAL,
+        temp_ambiente     REAL
       )
     ''');
     await db.execute('CREATE INDEX idx_registros_lote ON registros(lote_id)');
+  }
+
+  /// Solo agrega columnas nulas: los registros existentes no se tocan.
+  static Future<void> _agregarMedidasOpcionales(DatabaseExecutor db) async {
+    await db.execute('ALTER TABLE registros ADD COLUMN ph REAL');
+    await db.execute('ALTER TABLE registros ADD COLUMN brix REAL');
+    await db.execute('ALTER TABLE registros ADD COLUMN temp_ambiente REAL');
   }
 
   static Future<void> _agregarResultado(DatabaseExecutor db) async {

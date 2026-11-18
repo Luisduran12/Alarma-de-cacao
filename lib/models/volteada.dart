@@ -27,6 +27,9 @@ class Volteada {
   final String etapa;            // Etapa.fermentacion o Etapa.secado
   final double? latitud;         // Punto de secado (opcional)
   final double? longitud;
+  final double? ph;              // pH medido (opcional)
+  final double? brix;            // °Brix medido (opcional)
+  final double? tempAmbiente;    // Temperatura del aire (°C, opcional); NO es la de la masa
 
   Volteada({
     required this.id,
@@ -42,6 +45,9 @@ class Volteada {
     this.etapa = Etapa.fermentacion,
     this.latitud,
     this.longitud,
+    this.ph,
+    this.brix,
+    this.tempAmbiente,
   });
 
   bool get tieneUbicacion => latitud != null && longitud != null;
@@ -58,6 +64,9 @@ class Volteada {
     String? etapa,
     double? latitud,
     double? longitud,
+    double? ph,
+    double? brix,
+    double? tempAmbiente,
   }) {
     return Volteada(
       id: id,
@@ -73,6 +82,9 @@ class Volteada {
       etapa: etapa ?? this.etapa,
       latitud: latitud ?? this.latitud,
       longitud: longitud ?? this.longitud,
+      ph: ph ?? this.ph,
+      brix: brix ?? this.brix,
+      tempAmbiente: tempAmbiente ?? this.tempAmbiente,
     );
   }
 
@@ -91,6 +103,9 @@ class Volteada {
         'etapa': etapa,
         'latitud': latitud,
         'longitud': longitud,
+        'ph': ph,
+        'brix': brix,
+        'tempAmbiente': tempAmbiente,
       };
 
   // Crea una instancia desde JSON (tolerante a datos antiguos incompletos)
@@ -109,6 +124,9 @@ class Volteada {
       etapa: json['etapa'] ?? Etapa.fermentacion,
       latitud: (json['latitud'] as num?)?.toDouble(),
       longitud: (json['longitud'] as num?)?.toDouble(),
+      ph: (json['ph'] as num?)?.toDouble(),
+      brix: (json['brix'] as num?)?.toDouble(),
+      tempAmbiente: (json['tempAmbiente'] as num?)?.toDouble(),
     );
   }
 
@@ -127,6 +145,9 @@ class Volteada {
         'etapa': etapa,
         'confirmada': confirmada ? 1 : 0,
         'notif_id': notifId,
+        'ph': ph,
+        'brix': brix,
+        'temp_ambiente': tempAmbiente,
       };
 
   static Volteada fromRow(Map<String, Object?> r) {
@@ -144,6 +165,9 @@ class Volteada {
       etapa: (r['etapa'] as String?) ?? Etapa.fermentacion,
       latitud: (r['latitud'] as num?)?.toDouble(),
       longitud: (r['longitud'] as num?)?.toDouble(),
+      ph: (r['ph'] as num?)?.toDouble(),
+      brix: (r['brix'] as num?)?.toDouble(),
+      tempAmbiente: (r['temp_ambiente'] as num?)?.toDouble(),
     );
   }
 }
