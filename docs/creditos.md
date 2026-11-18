@@ -93,5 +93,14 @@ mandar a la IA) y en `evaluacion/galeria/` (solo para medir el acierto). Cada fo
   y mazorca sana. Una foto puede mostrar varias mazorcas y la etiqueta puede referirse a una.
 - Cambios: reducción a 768 px y sin metadatos.
 
-Las licencias y DOI de este apartado se copiaron del manifiesto de la galería; el 2026-11-18 no
-se volvieron a comprobar en las páginas de Zenodo.
+### Qué se comprobó el 2026-11-18 (API de Zenodo, solo lectura)
+- Los dos registros declaran licencia `cc-by-4.0` y acceso abierto. Los DOI, títulos y autores
+  coinciden con el manifiesto. El depósito de granos cortados tiene fecha 2026-09-18 y el de
+  mazorcas 2025-11-25.
+- **Las etiquetas del conjunto de granos cortados fueron "inferidas de los prefijos de los
+  nombres de archivo originales"** (así lo dice su descripción): no hay una revisión
+  individual declarada. Tiene solo 206 imágenes en 2 lotes. Por eso un técnico debe revisar las
+  fotos de referencia, y la evaluación con estas fotos no es una medición contra una
+  clasificación experta.
+- Esto no resuelve la confirmación de licencia final con los autores que pide el README del
+  depósito (no se leyó ese archivo).
