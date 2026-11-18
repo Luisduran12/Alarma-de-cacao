@@ -237,7 +237,7 @@ describe("POST /chat: errores de la IA y secretos", () => {
   });
 
   it("un error crudo con una clave dentro no sale en la respuesta ni en el registro", async () => {
-    const r = await crearChat({ ...deps(), ia: new IAFalsa(new Error("401 invalid x-api-key sk-ant-SECRETO-123")) })(post(base));
+    const r = await crearChat({ ...deps(), ia: new IAFalsa(new Error("401 invalid x-api-key CLAVE-FALSA-SECRETO-123")) })(post(base));
     expect(r.status).toBe(502);
     expect(await r.text()).not.toContain("SECRETO");
     expect(lineas.join("\n")).not.toContain("SECRETO");

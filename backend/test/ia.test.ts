@@ -85,7 +85,7 @@ describe("analizarImagen (fotos)", () => {
 
 describe("errores: se clasifican y NUNCA copian el mensaje original (puede traer claves)", () => {
   const cabeceras = new Headers();
-  const mensaje = "401 invalid x-api-key sk-ant-SECRETO-123";
+  const mensaje = "401 invalid x-api-key CLAVE-FALSA-SECRETO-123";
 
   it.each([
     [429, "ocupada"], [529, "ocupada"], [401, "configuracion"], [403, "configuracion"],

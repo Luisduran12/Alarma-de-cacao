@@ -82,8 +82,10 @@ La app **no lleva ninguna clave** dentro del código ni del APK.
   vereda). Con un servidor configurado, la app le pide además el nombre exacto
   (`--dart-define=BACKEND_URL=https://...`; la dirección no es un secreto) y lo
   guarda en el teléfono. Ver `docs/creditos.md`.
-- **IA (fases siguientes):** la clave de Anthropic vivirá solo en un backend,
-  nunca en la app.
+- **IA:** la clave de Anthropic vive solo en el servidor (`backend/`, funciones de
+  Vercel), nunca en la app. Contrato, despliegue y límites: `backend/README.md`;
+  costos estimados: `docs/costos-ia.md`; seguridad: `docs/backend-seguridad.md`.
+  Todavía **no está desplegado**.
 
 > La clave de OpenWeatherMap que estuvo en el primer commit (`cb55257`) quedó
 > expuesta en el historial público y debe darse por comprometida: hay que

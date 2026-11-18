@@ -277,7 +277,7 @@ describe("POST /analizar-foto: límites, gasto, errores y privacidad", () => {
   });
 
   it("un error crudo con una clave dentro no sale en la respuesta ni en el registro", async () => {
-    const r = await crearFoto({ ...deps(), ia: new IAFalsa(new Error("invalid x-api-key sk-ant-SECRETO-123")) })(peticion());
+    const r = await crearFoto({ ...deps(), ia: new IAFalsa(new Error("invalid x-api-key CLAVE-FALSA-SECRETO-123")) })(peticion());
     expect(await r.text()).not.toContain("SECRETO");
     expect(lineas.join("\n")).not.toContain("SECRETO");
   });
