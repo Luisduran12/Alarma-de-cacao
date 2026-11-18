@@ -21,7 +21,9 @@ import 'package:alarmacacao5_0/screens/comparacion_lotes_screen.dart';
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
 import 'package:alarmacacao5_0/screens/detalle_lote_screen.dart';
 import 'package:alarmacacao5_0/screens/home_screen.dart';
+import 'package:alarmacacao5_0/services/exportar_curva.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
+import 'package:alarmacacao5_0/widgets/curva_lote_chart.dart';
 
 Future<void> _cargarFuente(String familia, List<String> rutas) async {
   final loader = FontLoader(familia);
@@ -154,7 +156,8 @@ Future<void> _sembrarDatos() async {
       [[28, 93], [30, 92]], 5);
 }
 
-Future<void> _capturar(WidgetTester tester, Widget pantalla, String archivo, {double alto = 915}) async {
+Future<void> _capturar(WidgetTester tester, Widget pantalla, String archivo,
+    {double alto = 915, Future<void> Function(WidgetTester)? interaccion}) async {
   // En pruebas Flutter reemplaza las sombras por un borde negro; se desactiva
   // solo durante la captura (debe volver a true al terminar cada prueba).
   debugDisableShadows = false;
@@ -169,6 +172,7 @@ Future<void> _capturar(WidgetTester tester, Widget pantalla, String archivo, {do
   await tester.pump(const Duration(milliseconds: 300));
   await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
   await tester.pump();
+  if (interaccion != null) await interaccion(tester);
 
   await expectLater(find.byType(MaterialApp), matchesGoldenFile('../docs/capturas/$archivo'));
   await tester.pumpWidget(const SizedBox()); // libera timers
@@ -197,4 +201,55 @@ void main() {
   testWidgets('registro',
       (t) => _capturar(t, const ConfirmarVolteadaScreen(loteId: 'curso', volteadaId: 'curso-p72'), '03_registro.png', alto: 640));
   testWidgets('comparar', (t) => _capturar(t, const ComparacionLotesScreen(), '04_comparar_lotes.png', alto: 1150));
+
+  // ---- Fase 1: curva de valores (datos de EJEMPLO, no medidos) ----
+
+  testWidgets('fase1 detalle con banda y resumen',
+      (t) => _capturar(t, DetalleLoteScreen(lote: _loteDetalle), 'fase1/f1_detalle_curva.png', alto: 2600));
+
+  testWidgets('fase1 comparar con otro lote y curva ideal', (t) async {
+    // Curva ideal de EJEMPLO para la captura; la app real no trae ninguna.
+    SharedPreferences.setMockInitialValues({
+      'migrado_a_sqlite_v1': true,
+      'curva_ideal_v1': '[{"h":48,"t":43},{"h":72,"t":46},{"h":120,"t":47}]',
+    });
+    await _capturar(t, DetalleLoteScreen(lote: _loteDetalle), 'fase1/f1_comparar_ideal.png', alto: 2600,
+        interaccion: (t) async {
+      await t.tap(find.text('Comparar con otro lote'));
+      await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 400)));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Lote 02 - Cajón escalonado'));
+      await t.pumpAndSettle();
+    });
+  });
+
+  testWidgets('fase1 registro con pH, Brix y temperatura ambiente',
+      (t) => _capturar(t, const ConfirmarVolteadaScreen(loteId: 'curso', volteadaId: 'curso-p72'),
+          'fase1/f1_registro_campos.png', alto: 1000));
+
+  testWidgets('fase1 pdf del lote', (t) async {
+    debugDisableShadows = false;
+    final clave = GlobalKey();
+    final ini = _loteDetalle.inicioCiclo!;
+    await t.pumpWidget(_app(Scaffold(
+      body: SingleChildScrollView(
+        child: SizedBox(
+          width: 390,
+          child: CurvaLoteChart(
+              registros: _loteDetalle.volteadas, inicio: ini, nombre: _loteDetalle.title, repaintKey: clave),
+        ),
+      ),
+    )));
+    await t.runAsync(() async {
+      final png = await ExportarCurva.capturarPng(clave);
+      final pdf = await ExportarCurva.pdfDelLote(
+          lote: _loteDetalle, registros: _loteDetalle.volteadas, inicio: ini, png: png,
+          generado: DateTime(2026, 11, 18, 10));
+      final destino = File('docs/capturas/fase1/f1_lote.pdf')..createSync(recursive: true);
+      destino.writeAsBytesSync(pdf);
+      File('docs/capturas/fase1/f1_curva.png').writeAsBytesSync(png);
+    });
+    await t.pumpWidget(const SizedBox());
+    debugDisableShadows = true;
+  });
 }
