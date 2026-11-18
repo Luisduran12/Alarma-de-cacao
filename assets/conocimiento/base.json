@@ -385,7 +385,7 @@
     "voltear",
     "volteo",
     "voltee",
-    "cada cuanto",
+    "cada cuanto", "cuando volteo", "cuando voltear",
     "24 horas",
     "cada dia",
     "cajon",
@@ -691,6 +691,8 @@
    ],
    "palabras": [
     "secado",
+    "seca",
+    "secar",
     "humedad",
     "7",
     "hongos",
