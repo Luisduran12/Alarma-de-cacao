@@ -1,113 +1,108 @@
-import 'package:flutter/material.dart';
-import 'package:alarmacacao5_0/services/real_time_timer.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+
+/// Barra de progreso de un ciclo calculada desde la hora de INICIO GUARDADA.
+///
+/// Antes dependía de un temporizador en memoria (RealTimeTimer) y volvía a 0
+/// al cerrar la app. Ahora el progreso es (ahora - inicio) / (fin - inicio):
+/// al reabrir la app muestra exactamente el avance real.
+/// El Timer interno solo refresca la pantalla; no lleva la cuenta.
 class TimerProgressBar extends StatefulWidget {
-  final int totalDuration;
+  final DateTime inicio;
+  final DateTime fin;
   final VoidCallback? onTimerComplete;
   final Color? progressColor;
   final Color? backgroundColor;
   final double height;
   final TextStyle? textStyle;
 
+  /// Para pruebas: permite fijar "ahora".
+  final DateTime Function() reloj;
+
   const TimerProgressBar({
-    Key? key,
-    required this.totalDuration,
+    super.key,
+    required this.inicio,
+    required this.fin,
     this.onTimerComplete,
     this.progressColor,
     this.backgroundColor,
     this.height = 8.0,
     this.textStyle,
-  }) : super(key: key);
+    this.reloj = DateTime.now,
+  });
+
+  /// Progreso entre 0.0 y 1.0 para un instante dado.
+  static double calcularProgreso(DateTime inicio, DateTime fin, DateTime ahora) {
+    final total = fin.difference(inicio).inSeconds;
+    if (total <= 0) return 1.0;
+    return (ahora.difference(inicio).inSeconds / total).clamp(0.0, 1.0);
+  }
 
   @override
   State<TimerProgressBar> createState() => _TimerProgressBarState();
 }
 
 class _TimerProgressBarState extends State<TimerProgressBar> {
-  final RealTimeTimer _timer = RealTimeTimer();
-  int _elapsedTime = 0;
-  bool _isActive = false;
+  Timer? _refresco;
+  bool _completadoNotificado = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeTimer();
-  }
-
-  Future<void> _initializeTimer() async {
-    await _timer.loadTimerState();
-    
-    _timer.onTimeUpdate = (elapsed) {
-      if (mounted) {
-        setState(() {
-          _elapsedTime = elapsed;
-          _isActive = _timer.isTimerActive();
-        });
-      }
-    };
-
-    _timer.onTimerComplete = () {
-      if (mounted) {
-        setState(() {
-          _isActive = false;
-        });
-        if (widget.onTimerComplete != null) {
-          widget.onTimerComplete!();
-        }
-      }
-    };
-
-    setState(() {
-      _elapsedTime = _timer.getElapsedTime();
-      _isActive = _timer.isTimerActive();
+    _refresco = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
-    _timer.dispose();
+    _refresco?.cancel();
     super.dispose();
   }
 
-  double get _progress {
-    if (widget.totalDuration <= 0) return 0.0;
-    return (_elapsedTime / widget.totalDuration).clamp(0.0, 1.0);
-  }
-
-  String get _formattedTime {
-    final remaining = widget.totalDuration - _elapsedTime;
-    final hours = (remaining ~/ 3600).toString().padLeft(2, '0');
-    final minutes = ((remaining % 3600) ~/ 60).toString().padLeft(2, '0');
-    final seconds = (remaining % 60).toString().padLeft(2, '0');
-    return '$hours:$minutes:$seconds';
+  String _formato(Duration d) {
+    if (d.isNegative) d = Duration.zero;
+    final dias = d.inDays;
+    final horas = d.inHours.remainder(24);
+    final minutos = d.inMinutes.remainder(60);
+    return dias > 0 ? '${dias}d ${horas}h ${minutos}m' : '${horas}h ${minutos}m';
   }
 
   @override
   Widget build(BuildContext context) {
+    final ahora = widget.reloj();
+    final progreso = TimerProgressBar.calcularProgreso(widget.inicio, widget.fin, ahora);
+
+    if (progreso >= 1.0 && !_completadoNotificado) {
+      _completadoNotificado = true;
+      if (widget.onTimerComplete != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => widget.onTimerComplete!());
+      }
+    }
+
+    final estilo = widget.textStyle ?? Theme.of(context).textTheme.bodySmall;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         LinearProgressIndicator(
-          value: _progress,
+          value: progreso,
           backgroundColor: widget.backgroundColor ?? Colors.grey[300],
           valueColor: AlwaysStoppedAnimation<Color>(
-            widget.progressColor ?? Theme.of(context).primaryColor,
+            widget.progressColor ?? Theme.of(context).colorScheme.primary,
           ),
           minHeight: widget.height,
+          semanticsLabel: 'Progreso del ciclo',
+          semanticsValue: '${(progreso * 100).round()}%',
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            Text('Transcurrido: ${_formato(ahora.difference(widget.inicio))}', style: estilo),
             Text(
-              'Tiempo transcurrido: ${_elapsedTime ~/ 3600}h ${(_elapsedTime % 3600) ~/ 60}m',
-              style: widget.textStyle ?? Theme.of(context).textTheme.bodySmall,
-            ),
-            Text(
-              _formattedTime,
-              style: widget.textStyle ?? Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              progreso >= 1.0 ? 'Ciclo terminado' : 'Faltan: ${_formato(widget.fin.difference(ahora))}',
+              style: estilo?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
