@@ -70,7 +70,7 @@ class MyApp extends StatelessWidget {
           case '/clima':
             return MaterialPageRoute(builder: (_) => const ClimaCacaoPage());
           case '/configurar':
-            return MaterialPageRoute(builder: (_) => ConfigurarLoteScreen());
+            return MaterialPageRoute(builder: (_) => const ConfigurarLoteScreen());
           case '/confirmar':
             final args = settings.arguments;
             if (args is Map && args['loteId'] is String) {

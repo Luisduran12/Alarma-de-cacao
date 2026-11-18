@@ -1,131 +1,110 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+
 import 'package:alarmacacao5_0/models/lote.dart';
 import 'package:alarmacacao5_0/models/volteada.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
-import 'package:alarmacacao5_0/services/notification_service.dart';
 import 'package:alarmacacao5_0/services/notification_ids.dart';
-import 'package:intl/intl.dart';
-import 'package:timezone/timezone.dart' as tz;
+import 'package:alarmacacao5_0/services/notification_service.dart';
+import 'package:alarmacacao5_0/services/plantillas.dart';
 import 'package:alarmacacao5_0/widgets/registro_formulario_dialog.dart';
 
+/// Crea lotes y programa sus alarmas de volteo en el sistema operativo
+/// (zonedSchedule), de modo que suenan aunque la app esté cerrada.
 class AlarmScheduler {
-  final LoteService _loteService = LoteService();
+  final LoteService _loteService;
+  final NotificationService _notificationService;
   final Uuid _uuid = const Uuid();
-  final NotificationService _notificationService = NotificationService();
 
-  /// Programar alarmas predeterminadas (24h, 34h, 48h)
-  Future<void> programarAlarmasPredeterminadas(
-    Lote lote,
-    Function(double) onProgressUpdate,
-    Function(Lote) onLoteCompleted,
-  ) async {
-    try {
-      final List<int> predefinedHours = [24, 34, 48];
-      await _programarAlarmasReales(lote, predefinedHours, onProgressUpdate, onLoteCompleted);
-    } catch (e) {
-      debugPrint('❌ Error al programar alarmas predeterminadas: $e');
+  AlarmScheduler({LoteService? loteService, NotificationService? notificationService})
+      : _loteService = loteService ?? LoteService(),
+        _notificationService = notificationService ?? NotificationService();
+
+  /// Crea un lote a partir de una plantilla, programa todas sus alarmas y lo
+  /// guarda en la base de datos (sin tocar los demás lotes).
+  Future<Lote> crearLote({required String titulo, required PlantillaCiclo plantilla}) async {
+    final inicio = DateTime.now();
+    final loteId = _uuid.v4();
+    final fmt = DateFormat('dd/MM/yyyy HH:mm');
+    final volteadas = <Volteada>[];
+
+    final horas = [
+      ...plantilla.horasVolteo,
+      if (plantilla.tieneAlarmaFinal) plantilla.duracionHoras,
+    ];
+
+    for (var i = 0; i < horas.length; i++) {
+      final esFinal = plantilla.tieneAlarmaFinal && i == horas.length - 1;
+      final fecha = inicio.add(Duration(hours: horas[i]));
+      final volteadaId = _uuid.v4();
+      final notifId = await NotificationIds.siguiente();
+      final mensaje = esFinal
+          ? 'Fin del ciclo (${horas[i]} h) - ${fmt.format(fecha)}'
+          : 'Volteada ${i + 1} (${horas[i]} h) - ${fmt.format(fecha)}';
+
+      try {
+        await _notificationService.programarNotificacion(
+          id: notifId,
+          titulo: esFinal ? 'Fin del ciclo - $titulo' : 'Volteada ${i + 1} - $titulo',
+          cuerpo: esFinal
+              ? 'Terminó el ciclo de ${plantilla.duracionHoras} h. Toca para registrar los datos finales.'
+              : 'Es hora de voltear el cacao. Toca para registrar temperatura y humedad.',
+          fechaProgramada: fecha,
+          payload: NotificationService.payloadVolteada(loteId, volteadaId),
+        );
+      } catch (e) {
+        debugPrint('No se pudo programar la alarma $notifId: $e');
+      }
+
+      volteadas.add(Volteada(
+        id: volteadaId,
+        loteId: loteId,
+        mensaje: mensaje,
+        temperatura: 0,
+        humedad: 0,
+        observacion: '',
+        fecha: inicio,
+        fechaProgramada: fecha,
+        confirmada: false,
+        notifId: notifId,
+      ));
     }
-  }
 
-  /// Diálogo de usuario para configurar y programar alarmas personalizadas
-  Future<Lote?> mostrarDialogoConfigurarYProgramar(
-    BuildContext context, {
-    required Function(double) onProgressUpdate,
-    required Function(Lote) onLoteCompleted,
-  }) async {
-    final Map<String, dynamic>? dialogResult = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (_) => const RegistroFormularioDialog(),
-    );
-
-    if (dialogResult == null ||
-        !(dialogResult.containsKey('title') && dialogResult.containsKey('hours'))) {
-      debugPrint('⚠️ Diálogo cancelado o sin datos');
-      return null;
-    }
-
-    final String title = dialogResult['title'] as String;
-    final List<int> inputHours = dialogResult['hours'] as List<int>;
-    final List<int> validHours = inputHours.where((h) => h > 0).toList();
-
-    if (validHours.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠️ Debes ingresar al menos una hora válida.')),
-      );
-      return null;
-    }
-
-    final Lote lote = Lote(
-      id: _uuid.v4(),
-      title: title.isNotEmpty ? title : 'Lote Personalizado',
-      volteadas: [],
+    final lote = Lote(
+      id: loteId,
+      title: titulo,
       status: 'en proceso',
-      createdAt: DateTime.now(),
+      createdAt: inicio,
+      inicioCiclo: inicio,
+      finCiclo: inicio.add(Duration(hours: plantilla.duracionHoras)),
+      plantilla: plantilla.id,
+      volteadas: volteadas,
     );
-
-    await _programarAlarmasReales(lote, validHours, onProgressUpdate, onLoteCompleted);
+    await _loteService.addLote(lote);
     return lote;
   }
 
-  /// Lógica para programar las alarmas reales a partir de una lista de horas
-  Future<void> _programarAlarmasReales(
-    Lote lote,
-    List<int> horas,
-    Function(double) onProgressUpdate,
-    Function(Lote) onLoteCompleted,
-  ) async {
-    try {
-      final now = tz.TZDateTime.now(tz.local);
-      final List<Volteada> nuevasVolteadas = [];
+  /// Muestra el formulario de horas personalizadas y crea el lote.
+  Future<Lote?> crearLotePersonalizado(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final resultado = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (_) => const RegistroFormularioDialog(),
+    );
+    if (resultado == null) return null;
 
-      for (int i = 0; i < horas.length; i++) {
-        final int h = horas[i];
-        final tz.TZDateTime scheduledDate = now.add(Duration(hours: h));
-        final String mensaje = 'Volteada ${i + 1} para el ${DateFormat('dd/MM/yyyy HH:mm').format(scheduledDate)}';
-        final String volteadaId = _uuid.v4();
-        final int notifId = await NotificationIds.siguiente();
-
-        // Alarma real del sistema: suena aunque la app esté cerrada.
-        // (Antes se usaba un Timer.periodic en memoria que moría al cerrar la app.)
-        await _notificationService.programarNotificacion(
-          id: notifId,
-          titulo: 'Volteada ${i + 1} - ${lote.title}',
-          cuerpo: 'Es hora de voltear el cacao. Toca para registrar temperatura y humedad.',
-          fechaProgramada: scheduledDate,
-          payload: NotificationService.payloadVolteada(lote.id, volteadaId),
-        );
-
-        nuevasVolteadas.add(
-          Volteada(
-            id: volteadaId,
-            loteId: lote.id,
-            mensaje: mensaje,
-            temperatura: 0.0,
-            humedad: 0.0,
-            observacion: '',
-            fecha: DateTime.now(),
-            fechaProgramada: scheduledDate,
-            confirmada: false,
-            notifId: notifId,
-          ),
-        );
-
-        // Actualizar progreso visual
-        onProgressUpdate((i + 1) / horas.length);
-        await Future.delayed(const Duration(milliseconds: 250));
-      }
-
-      // Crear lote actualizado con volteadas programadas
-      final Lote actualizado = lote.copyWith(volteadas: nuevasVolteadas);
-      // Antes: saveLotes([actualizado]) reemplazaba TODA la lista y borraba los demás lotes.
-      await _loteService.upsertLote(actualizado);
-
-      onLoteCompleted(actualizado);
-
-      debugPrint("✅ Lote '${actualizado.title}' guardado con ${nuevasVolteadas.length} volteadas.");
-    } catch (e) {
-      debugPrint("❌ Error al programar alarmas: $e");
+    final titulo = (resultado['title'] as String).trim();
+    final plantilla = Plantillas.personalizada(resultado['hours'] as List<int>);
+    if (plantilla.horasVolteo.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Debes ingresar al menos una hora válida.')),
+      );
+      return null;
     }
+    return crearLote(
+      titulo: titulo.isNotEmpty ? titulo : 'Lote personalizado',
+      plantilla: plantilla,
+    );
   }
 }
