@@ -9,6 +9,7 @@ import 'migracion_prefs.dart';
 ///  - lotes:     un lote de cacao en beneficio.
 ///  - recordatorios: avisos de medir la temperatura (no son registros).
 ///  - lugares:   caché de nombres de lugar resueltos por el servidor.
+///  - chat_mensajes: historial de la conversación de cada lote (solo en el teléfono).
 ///  - registros: volteadas programadas y datos medidos (fecha, temperatura,
 ///               humedad, observación, latitud, longitud, etapa y, opcionales,
 ///               pH, Brix y temperatura ambiente).
@@ -19,7 +20,8 @@ class CacaoDatabase {
   /// v3: pH, Brix y temperatura ambiente opcionales en registros.
   /// v4: tabla recordatorios (avisos de medir la temperatura cada 12 h).
   /// v5: tabla lugares (nombres de lugar resueltos por el servidor, como caché).
-  static const int version = 5;
+  /// v6: tabla chat_mensajes (historial del chat por lote).
+  static const int version = 6;
 
   static Future<Database>? _instancia;
 
@@ -48,6 +50,7 @@ class CacaoDatabase {
           if (anterior < 3) await _agregarMedidasOpcionales(db);
           if (anterior < 4) await _crearRecordatorios(db);
           if (anterior < 5) await _crearLugares(db);
+          if (anterior < 6) await _crearChatMensajes(db);
         },
       ),
     );
@@ -90,6 +93,24 @@ class CacaoDatabase {
     await db.execute('CREATE INDEX idx_registros_lote ON registros(lote_id)');
     await _crearRecordatorios(db);
     await _crearLugares(db);
+    await _crearChatMensajes(db);
+  }
+
+  /// Historial del chat: una conversación por lote, que se borra junto con el lote.
+  /// `fuentes` es un JSON con las fuentes citadas en esa respuesta.
+  static Future<void> _crearChatMensajes(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE chat_mensajes (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        lote_id    TEXT NOT NULL REFERENCES lotes(id) ON DELETE CASCADE,
+        rol        TEXT NOT NULL,
+        texto      TEXT NOT NULL,
+        origen     TEXT NOT NULL DEFAULT 'ia',
+        fuentes    TEXT NOT NULL DEFAULT '[]',
+        creado_en  TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_chat_lote ON chat_mensajes(lote_id)');
   }
 
   /// Caché de nombres de lugar: la clave son las coordenadas redondeadas a 3
