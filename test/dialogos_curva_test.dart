@@ -43,7 +43,7 @@ void main() {
   group('EditorCurvaIdealDialog', () {
     testWidgets('escribir dos puntos y guardar devuelve la curva', (t) async {
       CurvaIdeal? r;
-      await _abrir<CurvaIdeal>(t, EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (v) => r = v);
+      await _abrir<CurvaIdeal>(t, const EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (v) => r = v);
       final campos = find.byType(TextField);
       await t.enterText(campos.at(0), '48');
       await t.enterText(campos.at(1), '45,5'); // coma decimal
@@ -62,7 +62,7 @@ void main() {
     testWidgets('una fila a medias muestra el error y no cierra', (t) async {
       CurvaIdeal? r;
       var cerro = false;
-      await _abrir<CurvaIdeal>(t, EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (v) {
+      await _abrir<CurvaIdeal>(t, const EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (v) {
         r = v;
         cerro = true;
       });
@@ -76,7 +76,7 @@ void main() {
     });
 
     testWidgets('temperatura fuera de -10..80 °C se rechaza', (t) async {
-      await _abrir<CurvaIdeal>(t, EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (_) {});
+      await _abrir<CurvaIdeal>(t, const EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (_) {});
       await t.enterText(find.byType(TextField).at(0), '48');
       await t.enterText(find.byType(TextField).at(1), '95');
       await t.tap(find.text('Guardar'));
@@ -86,7 +86,7 @@ void main() {
 
     testWidgets('sin escribir nada guarda una curva vacía (no inventa puntos)', (t) async {
       CurvaIdeal? r;
-      await _abrir<CurvaIdeal>(t, EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (v) => r = v);
+      await _abrir<CurvaIdeal>(t, const EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (v) => r = v);
       await t.tap(find.text('Guardar'));
       await t.pumpAndSettle();
       expect(r!.estaVacia, isTrue);
@@ -101,13 +101,13 @@ void main() {
       await t.pumpAndSettle();
       expect(r!.estaVacia, isTrue);
 
-      await _abrir<CurvaIdeal>(t, EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (_) {});
+      await _abrir<CurvaIdeal>(t, const EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (_) {});
       expect(find.text('Borrar curva'), findsNothing);
     });
 
     testWidgets('Cancelar devuelve null', (t) async {
       CurvaIdeal? r = CurvaIdeal.vacia;
-      await _abrir<CurvaIdeal>(t, EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (v) => r = v);
+      await _abrir<CurvaIdeal>(t, const EditorCurvaIdealDialog(inicial: CurvaIdeal.vacia), (v) => r = v);
       await t.tap(find.text('Cancelar'));
       await t.pumpAndSettle();
       expect(r, isNull);
