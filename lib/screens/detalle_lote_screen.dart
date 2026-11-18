@@ -7,10 +7,15 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/lote.dart';
+import '../data/referencias_curva.dart';
 import '../models/volteada.dart';
+import '../services/curva_ideal.dart';
 import '../services/lote_service.dart';
 import '../services/plantillas.dart';
+import '../services/resumen_curva.dart';
 import '../widgets/curva_lote_chart.dart';
+import '../widgets/editor_curva_ideal_dialog.dart';
+import '../widgets/selector_lote_dialog.dart';
 import 'confirmar_volteada_screen.dart';
 
 class DetalleLoteScreen extends StatefulWidget {
@@ -26,12 +31,115 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
   final LoteService _loteService = LoteService();
   final _fmt = DateFormat('dd/MM/yyyy HH:mm');
   late Lote _lote;
+  CurvaIdeal _ideal = CurvaIdeal.vacia;
+  Lote? _comparado; // segundo lote superpuesto en la curva
 
   @override
   void initState() {
     super.initState();
     _lote = widget.lote;
     _recargar();
+    CurvaIdealStorage.cargar().then((c) {
+      if (mounted) setState(() => _ideal = c);
+    });
+  }
+
+  DateTime get _inicioCurva => _lote.inicioCiclo ?? _confirmadas.firstOrNull?.fecha ?? _lote.createdAt;
+
+  Future<void> _editarIdeal() async {
+    final nueva = await showDialog<CurvaIdeal>(
+      context: context,
+      builder: (_) => EditorCurvaIdealDialog(inicial: _ideal),
+    );
+    if (nueva == null) return;
+    await CurvaIdealStorage.guardar(nueva);
+    if (mounted) setState(() => _ideal = nueva);
+  }
+
+  Future<void> _elegirComparacion() async {
+    final lotes = (await _loteService.loadLotes()).where((l) => l.id != _lote.id).toList();
+    if (!mounted) return;
+    final elegido = await showDialog<Lote>(context: context, builder: (_) => SelectorLoteDialog(lotes: lotes));
+    if (elegido != null && mounted) setState(() => _comparado = elegido);
+  }
+
+  Widget _bloqueCurva() {
+    final comp = _comparado;
+    final resumen = ResumenCurva.calcular(_confirmadas, _inicioCurva);
+    final conIdeal = _ideal.estaVacia ? null : _ideal.comparar(_confirmadas, _inicioCurva);
+    final tema = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CurvaLoteChart(
+          registros: _confirmadas,
+          inicio: _inicioCurva,
+          nombre: _lote.title,
+          ideal: _ideal,
+          comparacion: comp == null
+              ? null
+              : SerieComparada(
+                  nombre: comp.title,
+                  registros: comp.volteadas,
+                  inicio: comp.inicioCiclo ??
+                      (comp.volteadas.where((v) => v.confirmada).map((v) => v.fecha).fold<DateTime?>(
+                              null, (a, b) => a == null || b.isBefore(a) ? b : a) ??
+                          comp.createdAt),
+                ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _elegirComparacion,
+              icon: const Icon(Icons.compare_arrows),
+              label: Text(comp == null ? 'Comparar con otro lote' : 'Cambiar lote'),
+            ),
+            if (comp != null)
+              TextButton(onPressed: () => setState(() => _comparado = null), child: const Text('Quitar comparación')),
+            OutlinedButton.icon(
+              onPressed: _editarIdeal,
+              icon: const Icon(Icons.timeline),
+              label: Text(_ideal.estaVacia ? 'Definir curva ideal' : 'Editar curva ideal'),
+            ),
+          ],
+        ),
+        _seccion('📝 Resumen'),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final f in resumen.frases())
+                  Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(f, style: tema.textTheme.bodyLarge)),
+                if (conIdeal != null) Text(conIdeal.frase(), style: tema.textTheme.bodyLarge),
+              ],
+            ),
+          ),
+        ),
+        ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          title: const Text('¿De dónde sale el rango de referencia?'),
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${ReferenciasCurva.fermentacionTemperatura.fuente}\n\n'
+                '${ReferenciasCurva.secadoTemperatura.fuente}\n\n'
+                'Es una guía, no una norma: confirme con su técnico o asociación. '
+                'Para las primeras 48 h de fermentación no hay referencia verificada. '
+                '${ReferenciasCurva.sinReferenciaVerificada['ph']} '
+                '${ReferenciasCurva.sinReferenciaVerificada['brix']}',
+                style: tema.textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ],
+    );
   }
 
   /// Recarga el lote desde la base de datos (única fuente de datos).
@@ -76,7 +184,10 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
     }
 
     final rows = <List<dynamic>>[
-      ['Fecha', 'Etapa', 'Temperatura (°C)', 'Humedad (%)', 'Observación', 'Latitud', 'Longitud'],
+      [
+        'Fecha', 'Etapa', 'Temperatura (°C)', 'Humedad (%)', 'Observación', 'Latitud', 'Longitud',
+        'pH', 'Brix', 'Temperatura ambiente (°C)',
+      ],
       for (final v in registros)
         [
           DateFormat('yyyy-MM-dd HH:mm').format(v.fecha),
@@ -86,6 +197,9 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
           v.observacion,
           v.latitud ?? '',
           v.longitud ?? '',
+          v.ph ?? '',
+          v.brix ?? '',
+          v.tempAmbiente ?? '',
         ],
     ];
 
@@ -263,10 +377,7 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
               ),
             ),
             _seccion('📈 Curva de temperatura y humedad'),
-            CurvaLoteChart(
-              registros: _confirmadas,
-              inicio: _lote.inicioCiclo ?? _confirmadas.firstOrNull?.fecha ?? _lote.createdAt,
-            ),
+            _bloqueCurva(),
             _seccion('📍 Punto de secado'),
             if (punto == null)
               const Text('Aún no hay registros de secado con ubicación.')
@@ -313,6 +424,12 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('🌡️ ${v.temperatura} °C   💧 ${v.humedad} %'),
+                      if (v.ph != null || v.brix != null || v.tempAmbiente != null)
+                        Text([
+                          if (v.ph != null) 'pH ${v.ph}',
+                          if (v.brix != null) '°Brix ${v.brix}',
+                          if (v.tempAmbiente != null) 'Ambiente ${v.tempAmbiente} °C',
+                        ].join(' · ')),
                       if (v.observacion.isNotEmpty) Text('📝 ${v.observacion}'),
                       if (v.tieneUbicacion)
                         Text('📍 ${v.latitud!.toStringAsFixed(5)}, ${v.longitud!.toStringAsFixed(5)}'),
