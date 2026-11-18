@@ -32,7 +32,7 @@ const MIN_LADO = 200;
  * tope bajo, un razonamiento largo dejaría el JSON cortado (respuesta inválida, ya cobrada).
  * El peor caso por foto es este tope × el precio de salida (ver docs/costos-ia.md).
  */
-const MAX_TOKENS_RESPUESTA = 4000;
+export const MAX_TOKENS_RESPUESTA = 4000;
 
 const Cuerpo = z
   .object({
