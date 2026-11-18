@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 
 // Servicios
+import 'package:alarmacacao5_0/services/alarm_scheduler.dart';
 import 'package:alarmacacao5_0/services/notification_service.dart';
 
 
@@ -24,6 +26,10 @@ void main() async {
   await NotificationService().init(); // Inicializa notificaciones
   await NotificationService().solicitarPermisos(); // Notificaciones + alarmas exactas
 
+  // Red de seguridad: si el sistema perdió alguna alarma (por ejemplo, un ahorrador
+  // de batería bloqueó el reinicio de alarmas), se reprograma. No retrasa el arranque.
+  unawaited(_reprogramarAlarmasPerdidas());
+
   // Si la app se abrió tocando una notificación con la app cerrada,
   // se abre el formulario de esa volteada cuando el Navigator esté listo.
   final argsLanzamiento = await NotificationService().argumentosDeLanzamiento();
@@ -37,6 +43,16 @@ void main() async {
         arguments: argsLanzamiento,
       );
     });
+  }
+}
+
+Future<void> _reprogramarAlarmasPerdidas() async {
+  try {
+    final pendientes = (await NotificationService().getPendingNotifications()).map((p) => p.id).toSet();
+    final n = await AlarmScheduler().reprogramarFaltantes(pendientes);
+    if (n > 0) debugPrint('🔁 Se reprogramaron $n alarmas que el sistema había perdido');
+  } catch (e) {
+    debugPrint('No se pudieron revisar las alarmas pendientes: $e');
   }
 }
 

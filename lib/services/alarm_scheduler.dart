@@ -24,6 +24,55 @@ typedef ProgramarNotificacion = Future<void> Function({
   bool esRecordatorio,
 });
 
+/// Título, cuerpo y payload de la notificación de un registro de alarma.
+///
+/// Se deduce del `mensaje` que se guarda en el registro, de modo que los textos
+/// salen siempre del mismo sitio: al crear el lote y al reprogramar una alarma
+/// que el sistema perdió.
+class TextoAlarma {
+  final String titulo;
+  final String cuerpo;
+  final String payload;
+  const TextoAlarma(this.titulo, this.cuerpo, this.payload);
+
+  static const prefijoFinFermentacion = 'Fin de la fermentación';
+  static const prefijoFinCiclo = 'Fin del ciclo';
+
+  static String? _horas(String mensaje) => RegExp(r'\((\d+) h\)').firstMatch(mensaje)?.group(1);
+
+  static TextoAlarma deRegistro({
+    required String tituloLote,
+    required String mensaje,
+    required String loteId,
+    required String volteadaId,
+  }) {
+    final horas = _horas(mensaje);
+    if (mensaje.startsWith(prefijoFinFermentacion)) {
+      return TextoAlarma(
+        '$prefijoFinFermentacion - $tituloLote',
+        '${horas == null ? 'Terminó la fermentación.' : 'Se cumplieron las $horas h.'} '
+            'Haga la prueba de corte: toque para ver la guía.',
+        // Abre la guía de la prueba de corte.
+        NotificationService.payloadCorte(loteId, volteadaId),
+      );
+    }
+    if (mensaje.startsWith(prefijoFinCiclo)) {
+      return TextoAlarma(
+        '$prefijoFinCiclo - $tituloLote',
+        '${horas == null ? 'Terminó el ciclo.' : 'Terminó el ciclo de $horas h.'} '
+            'Toca para registrar los datos finales.',
+        NotificationService.payloadVolteada(loteId, volteadaId),
+      );
+    }
+    final n = RegExp(r'Volteada (\d+)').firstMatch(mensaje)?.group(1);
+    return TextoAlarma(
+      n == null ? 'Volteada - $tituloLote' : 'Volteada $n - $tituloLote',
+      'Es hora de voltear el cacao. Toca para registrar temperatura y humedad.',
+      NotificationService.payloadVolteada(loteId, volteadaId),
+    );
+  }
+}
+
 /// Crea lotes y programa sus alarmas de volteo y recordatorios en el sistema
 /// operativo (zonedSchedule), de modo que suenan aunque la app esté cerrada.
 class AlarmScheduler {
@@ -64,30 +113,20 @@ class AlarmScheduler {
       final notifId = await _siguienteId();
       final finFermentacion = esFinal && plantilla.finEsFermentacion;
       final mensaje = finFermentacion
-          ? 'Fin de la fermentación (${horas[i]} h) - ${fmt.format(fecha)}'
+          ? '${TextoAlarma.prefijoFinFermentacion} (${horas[i]} h) - ${fmt.format(fecha)}'
           : esFinal
-              ? 'Fin del ciclo (${horas[i]} h) - ${fmt.format(fecha)}'
+              ? '${TextoAlarma.prefijoFinCiclo} (${horas[i]} h) - ${fmt.format(fecha)}'
               : 'Volteada ${i + 1} (${horas[i]} h) - ${fmt.format(fecha)}';
+      final texto = TextoAlarma.deRegistro(
+          tituloLote: titulo, mensaje: mensaje, loteId: loteId, volteadaId: volteadaId);
 
       try {
         await _programar(
           id: notifId,
-          titulo: finFermentacion
-              ? 'Fin de la fermentación - $titulo'
-              : esFinal
-                  ? 'Fin del ciclo - $titulo'
-                  : 'Volteada ${i + 1} - $titulo',
-          cuerpo: finFermentacion
-              ? 'Se cumplieron las ${plantilla.duracionHoras} h. Haga la prueba de corte: toque para ver la guía.'
-              : esFinal
-                  ? 'Terminó el ciclo de ${plantilla.duracionHoras} h. Toca para registrar los datos finales.'
-                  : 'Es hora de voltear el cacao. Toca para registrar temperatura y humedad.',
+          titulo: texto.titulo,
+          cuerpo: texto.cuerpo,
           fechaProgramada: fecha,
-          // El aviso de fin de fermentación abre la guía de la prueba de corte;
-          // las demás alarmas abren el formulario de la volteada.
-          payload: finFermentacion
-              ? NotificationService.payloadCorte(loteId, volteadaId)
-              : NotificationService.payloadVolteada(loteId, volteadaId),
+          payload: texto.payload,
         );
       } catch (e) {
         debugPrint('No se pudo programar la alarma $notifId: $e');
@@ -159,6 +198,61 @@ class AlarmScheduler {
       programados++;
     }
     return programados;
+  }
+
+  /// Red de seguridad para teléfonos que bloquean el reinicio de alarmas (los
+  /// ahorradores de batería de algunos Android lo hacen): reprograma, con el MISMO
+  /// id, las alarmas de volteo y los recordatorios que todavía no han pasado y que
+  /// el sistema ya no tiene en su lista [idsPendientes]. Las que siguen
+  /// programadas no se tocan, así que no se duplica nada. Devuelve cuántas
+  /// reprogramó. Se llama al abrir la app.
+  Future<int> reprogramarFaltantes(Set<int> idsPendientes, {DateTime? ahora}) async {
+    final corte = ahora ?? DateTime.now();
+    var reprogramadas = 0;
+
+    final lotes = await _loteService.loadLotes();
+    final titulos = {for (final l in lotes) l.id: l.title};
+
+    for (final lote in lotes) {
+      for (final v in lote.volteadas) {
+        if (v.confirmada || v.notifId == 0 || !v.fechaProgramada.isAfter(corte)) continue;
+        if (idsPendientes.contains(v.notifId)) continue;
+        final texto = TextoAlarma.deRegistro(
+            tituloLote: lote.title, mensaje: v.mensaje, loteId: lote.id, volteadaId: v.id);
+        try {
+          await _programar(
+            id: v.notifId,
+            titulo: texto.titulo,
+            cuerpo: texto.cuerpo,
+            fechaProgramada: v.fechaProgramada,
+            payload: texto.payload,
+          );
+          reprogramadas++;
+        } catch (e) {
+          debugPrint('No se pudo reprogramar la alarma ${v.notifId}: $e');
+        }
+      }
+    }
+
+    for (final r in await _recordatorios.todos()) {
+      if (!r.fechaProgramada.isAfter(corte) || idsPendientes.contains(r.notifId)) continue;
+      final titulo = titulos[r.loteId];
+      if (titulo == null) continue;
+      try {
+        await _programar(
+          id: r.notifId,
+          titulo: 'Medir temperatura - $titulo',
+          cuerpo: 'Mida la temperatura de la masa y anótela. Toca para registrar.',
+          fechaProgramada: r.fechaProgramada,
+          payload: NotificationService.payloadMedir(r.loteId),
+          esRecordatorio: true,
+        );
+        reprogramadas++;
+      } catch (e) {
+        debugPrint('No se pudo reprogramar el recordatorio ${r.notifId}: $e');
+      }
+    }
+    return reprogramadas;
   }
 
   /// Apaga los recordatorios futuros del lote (los ya pasados quedan como historial).

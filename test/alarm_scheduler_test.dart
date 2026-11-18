@@ -177,6 +177,101 @@ void main() {
     });
   });
 
+  group('reprogramarFaltantes (red de seguridad)', () {
+    test('si el sistema no perdió nada, no reprograma nada', () async {
+      await scheduler.crearLote(titulo: 'A', plantilla: Plantillas.fedecacao144);
+      final todos = programadas.map((c) => c.id).toSet();
+      programadas.clear();
+      expect(await scheduler.reprogramarFaltantes(todos), 0);
+      expect(programadas, isEmpty);
+    });
+
+    test('si el sistema perdió TODO (por ejemplo tras un reinicio bloqueado), reprograma las 12 con los mismos ids', () async {
+      await scheduler.crearLote(titulo: 'Lote A', plantilla: Plantillas.fedecacao144);
+      final originales = {for (final c in programadas) c.id: c};
+      programadas.clear();
+
+      final n = await scheduler.reprogramarFaltantes(<int>{});
+      expect(n, 12);
+      expect(programadas.map((c) => c.id).toSet(), originales.keys.toSet());
+      for (final c in programadas) {
+        final o = originales[c.id]!;
+        expect(c.titulo, o.titulo, reason: 'mismo título que al crear el lote');
+        expect(c.cuerpo, o.cuerpo);
+        expect(c.payload, o.payload);
+        expect(c.esRecordatorio, o.esRecordatorio);
+        expect(c.fecha, o.fecha);
+      }
+    });
+
+    test('solo reprograma las que faltan', () async {
+      await scheduler.crearLote(titulo: 'A', plantilla: Plantillas.fedecacao144);
+      final ids = programadas.map((c) => c.id).toList();
+      programadas.clear();
+      final siguenProgramadas = ids.take(9).toSet();
+      expect(await scheduler.reprogramarFaltantes(siguenProgramadas), 3);
+      expect(programadas.map((c) => c.id).toSet(), ids.skip(9).toSet());
+    });
+
+    test('no reprograma lo que ya pasó ni los registros ya confirmados', () async {
+      final lote = await scheduler.crearLote(titulo: 'A', plantilla: Plantillas.fedecacao144);
+      programadas.clear();
+      // Han pasado 100 h: quedan por venir la alarma de 120 h, la de 144 h y los avisos de 108 y 132 h.
+      final ahora = lote.inicioCiclo!.add(const Duration(hours: 100));
+      expect(await scheduler.reprogramarFaltantes(<int>{}, ahora: ahora), 4);
+
+      // Se confirma la de 120 h: ya no se reprograma.
+      programadas.clear();
+      final v120 = lote.volteadas.firstWhere((v) => v.fechaProgramada.difference(lote.inicioCiclo!).inHours == 120);
+      await lotes.guardarRegistro(v120.copyWith(confirmada: true));
+      expect(await scheduler.reprogramarFaltantes(<int>{}, ahora: ahora), 3);
+    });
+
+    test('el aviso de fin de fermentación reprogramado sigue abriendo la guía', () async {
+      final lote = await scheduler.crearLote(titulo: 'Lote A', plantilla: Plantillas.fedecacao144);
+      programadas.clear();
+      await scheduler.reprogramarFaltantes(<int>{});
+      final fin = programadas.firstWhere((c) => c.titulo.startsWith('Fin de la fermentación'));
+      expect(NotificationService.argumentosDesdePayload(fin.payload)!['ruta'], NotificationService.rutaGuiaCorte);
+      expect(fin.payload!.contains(lote.id), isTrue);
+    });
+
+    test('los avisos que no llevan texto de fermentación siguen igual tras reprogramarse (predeterminada)', () async {
+      await scheduler.crearLote(titulo: 'B', plantilla: Plantillas.predeterminada);
+      final originales = {for (final c in programadas) c.id: c.titulo};
+      programadas.clear();
+      await scheduler.reprogramarFaltantes(<int>{});
+      expect({for (final c in programadas) c.id: c.titulo}, originales);
+    });
+
+    test('si reprogramar falla en una, sigue con las demás', () async {
+      await scheduler.crearLote(titulo: 'A', plantilla: Plantillas.fedecacao144);
+      programadas.clear();
+      fallar = true; // rechaza solo los recordatorios
+      final n = await scheduler.reprogramarFaltantes(<int>{});
+      expect(n, 5, reason: 'las 5 alarmas de volteo sí; los 7 recordatorios fallaron');
+    });
+
+    test('un recordatorio de un lote que ya no existe se ignora', () async {
+      final lote = await scheduler.crearLote(titulo: 'A', plantilla: Plantillas.fedecacao144);
+      await db.execute('PRAGMA foreign_keys = OFF');
+      await db.delete('lotes', where: 'id = ?', whereArgs: [lote.id]);
+      programadas.clear();
+      expect(await scheduler.reprogramarFaltantes(<int>{}), 0);
+    });
+  });
+
+  group('TextoAlarma', () {
+    test('sin horas en el mensaje igual produce un texto sensato', () {
+      final t = TextoAlarma.deRegistro(tituloLote: 'L', mensaje: 'Fin del ciclo', loteId: 'a', volteadaId: 'b');
+      expect(t.cuerpo, 'Terminó el ciclo. Toca para registrar los datos finales.');
+      final f = TextoAlarma.deRegistro(tituloLote: 'L', mensaje: 'Fin de la fermentación', loteId: 'a', volteadaId: 'b');
+      expect(f.cuerpo, startsWith('Terminó la fermentación.'));
+      final v = TextoAlarma.deRegistro(tituloLote: 'L', mensaje: 'algo raro', loteId: 'a', volteadaId: 'b');
+      expect(v.titulo, 'Volteada - L');
+    });
+  });
+
   group('payloads', () {
     test('medir temperatura: m|lote abre un registro nuevo', () {
       expect(NotificationService.argumentosDesdePayload('m|L1'),
