@@ -40,6 +40,12 @@ const DESCRIPCION_MODO: Record<ModoFoto, string> = {
   mazorca_hoja: "una mazorca u hoja de cacao (posibles enfermedades)",
 };
 
+/** Va antes de las fotos de ejemplo, en el mensaje del usuario. */
+export const NOTA_EJEMPLOS =
+  "A continuación van fotos de EJEMPLO de conjuntos de datos públicos, cada una con su etiqueta. Sirven solo para que veas cómo se ve cada clase. " +
+  "Pueden ser distintas a la foto del productor (otra cámara, otra luz, otro lugar o país). No copies la etiqueta de un ejemplo: compara solo lo que de verdad ves. " +
+  "Si la foto del productor no se parece a ningún ejemplo, baja tu confianza. Los ejemplos no cubren todas las categorías posibles.";
+
 export function sistemaFoto(modo: ModoFoto): string {
   return `Eres el asistente de Cacao Light. Analizas la foto de un productor de cacao: ${DESCRIPCION_MODO[modo]}.
 

@@ -5,6 +5,7 @@ import { errorHttp, leerJson, respuestaJson } from "./http.js";
 import { ErrorIA, type ClienteIA } from "./ia.js";
 import { procesarJpeg } from "./jpeg.js";
 import { registrarGasto } from "./limites.js";
+import { cargarEjemplos, type EjemploReferencia } from "./referencias.js";
 import { CATEGORIAS, sistemaFoto, type ModoFoto } from "./prompts.js";
 import { metodoNoPermitido, pasarPuerta, type Dependencias } from "./puerta.js";
 import { registrar } from "./registro.js";
@@ -112,6 +113,8 @@ export function validarResultado(modo: ModoFoto, r: ResultadoIA): ResultadoFoto 
 
 export interface DepsFoto extends Dependencias {
   ia: ClienteIA;
+  /** Ejemplos de referencia para el modo (se cambia en pruebas). Por defecto lee backend/referencias. */
+  ejemplos?: (modo: ModoFoto, porClase: number) => EjemploReferencia[];
 }
 
 export function crearFoto(deps: DepsFoto): (request: Request) => Promise<Response> {
@@ -141,10 +144,23 @@ export function crearFoto(deps: DepsFoto): (request: Request) => Promise<Respons
       return errorHttp(400, "imagen_muy_pequena", "La foto es muy pequeña. Tome otra más cerca.");
     }
 
+    // Ejemplos de referencia: solo si están activados (REFERENCIAS_POR_CLASE > 0). Si no se pueden
+    // leer, se falla en vez de seguir sin ellos en silencio: el servicio cambiaría de calidad sin avisar.
+    let ejemplos: EjemploReferencia[] = [];
+    if (deps.cfg.referenciasPorClase > 0) {
+      try {
+        ejemplos = (deps.ejemplos ?? cargarEjemplos)(c.data.modo, deps.cfg.referenciasPorClase);
+      } catch {
+        registrar("error", "referencias_no_disponibles", { endpoint: "analizar-foto", codigo: "servidor_mal_configurado", estado: 500 });
+        return errorHttp(500, "servidor_mal_configurado", "El servicio no está bien configurado. Intente más tarde.");
+      }
+    }
+
     const inicio = Date.now();
     let r;
     try {
       r = await deps.ia.analizarImagen({
+        ejemplos,
         modelo: deps.cfg.modeloFoto,
         sistema: sistemaFoto(c.data.modo),
         // La imagen que va a la IA es la LIMPIA (sin EXIF/GPS).

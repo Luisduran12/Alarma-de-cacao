@@ -27,6 +27,12 @@ export interface Config {
   pepper: string | undefined;
   /** Contacto que se incluye en el User-Agent de Nominatim (política de OSM). */
   contactoNominatim: string | undefined;
+  /**
+   * Fotos de referencia (ejemplos) por clase que se mandan junto a la foto del productor (0 a 5).
+   * 0 = ninguna. Se deja en 0 hasta MEDIR con `npm run evaluar` que los ejemplos mejoran el acierto:
+   * cada ejemplo suma tokens de entrada (ver docs/costos-ia.md).
+   */
+  referenciasPorClase: number;
   /** Interruptor para apagar /lugar (la política de Nominatim pide poder cambiar de servicio si lo piden). */
   lugarDesactivado: boolean;
 }
@@ -77,6 +83,7 @@ export function cargarConfig(env: Record<string, string | undefined> = process.e
     bloqueoTotal: env.BLOQUEO_TOTAL === "1",
     pepper: texto(env.ID_PEPPER),
     contactoNominatim: texto(env.NOMINATIM_CONTACTO),
+    referenciasPorClase: entero(env.REFERENCIAS_POR_CLASE, 0, 0, 5),
     lugarDesactivado: env.LUGAR_DESACTIVADO === "1",
   };
 }

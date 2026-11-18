@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AVISO_FOTO, crearFoto, EsquemaFoto, validarResultado, type ResultadoIA } from "../src/foto.js";
 import { costoMicroUsd } from "../src/costos.js";
-import { ErrorIA, type ClienteIA, type RespuestaEstructurada } from "../src/ia.js";
-import { CATEGORIAS, sistemaFoto, type ModoFoto } from "../src/prompts.js";
+import { bloquesEjemplos, ErrorIA, type ClienteIA, type RespuestaEstructurada } from "../src/ia.js";
+import { CATEGORIAS, NOTA_EJEMPLOS, sistemaFoto, type ModoFoto } from "../src/prompts.js";
 import { deps, ID_A, post } from "./ayudas.js";
 import { conSegmentos, EXIF_CON_GPS, FIXTURE, seg } from "./jpeg.test.js";
 
@@ -298,5 +298,67 @@ describe("POST /analizar-foto: límites, gasto, errores y privacidad", () => {
     await crearFoto({ ...deps(), ia: new IAFalsa() })(peticion());
     const ok = lineas.map((l) => JSON.parse(l) as Record<string, unknown>).find((o) => o.evento === "foto_ok")!;
     expect(Object.keys(ok).sort()).toEqual(["costo_micro_usd", "endpoint", "estado", "evento", "modelo", "ms", "nivel", "tokens_in", "tokens_out"]);
+  });
+});
+
+describe("POST /analizar-foto: ejemplos de referencia", () => {
+  const ej = (n: number) => Array.from({ length: n }, (_, i) => ({ descripcion: `Ejemplo ${i + 1}`, imagenBase64: Buffer.from(`foto${i}`).toString("base64") }));
+
+  it("por defecto (REFERENCIAS_POR_CLASE sin definir) NO se manda ningún ejemplo ni se leen del disco", async () => {
+    const ia = new IAFalsa();
+    let lecturas = 0;
+    const r = await crearFoto({ ...deps(), ia, ejemplos: () => { lecturas++; return ej(3); } })(peticion());
+    expect(r.status).toBe(200);
+    expect(lecturas).toBe(0);
+    expect(ia.llamadas[0]!.ejemplos).toEqual([]);
+  });
+
+  it("con REFERENCIAS_POR_CLASE=2 pide los ejemplos de ese modo con ese número y se los pasa a la IA", async () => {
+    const ia = new IAFalsa({ valor: bueno("mazorca_hoja"), uso: USO, parada: "fin" });
+    const pedidos: Array<[string, number]> = [];
+    const r = await crearFoto({ ...deps({ REFERENCIAS_POR_CLASE: "2" }), ia, ejemplos: (m, n) => { pedidos.push([m, n]); return ej(2); } })(peticion(FIXTURE, {}, "mazorca_hoja"));
+    expect(r.status).toBe(200);
+    expect(pedidos).toEqual([["mazorca_hoja", 2]]);
+    expect(ia.llamadas[0]!.ejemplos).toHaveLength(2);
+  });
+
+  it("valores inválidos de la variable (-1, 9, texto) se ignoran: queda en 0", async () => {
+    for (const v of ["-1", "9", "mucho", "1.5"]) {
+      expect(deps({ REFERENCIAS_POR_CLASE: v }).cfg.referenciasPorClase, v).toBe(0);
+    }
+    expect(deps({ REFERENCIAS_POR_CLASE: "5" }).cfg.referenciasPorClase).toBe(5);
+  });
+
+  it("si los ejemplos no se pueden leer: 500 servidor_mal_configurado y NO se llama a la IA (no se sigue en silencio)", async () => {
+    const ia = new IAFalsa();
+    const r = await crearFoto({ ...deps({ REFERENCIAS_POR_CLASE: "1" }), ia, ejemplos: () => { throw new Error("ENOENT /ruta/secreta"); } })(peticion());
+    expect(r.status).toBe(500);
+    expect(((await r.json()) as { error: { codigo: string } }).error.codigo).toBe("servidor_mal_configurado");
+    expect(ia.llamadas).toHaveLength(0);
+  });
+
+  it("con los archivos reales: 4 clases × 1 ejemplo en corte, y grano seco no lleva ejemplos", async () => {
+    const ia = new IAFalsa();
+    await crearFoto({ ...deps({ REFERENCIAS_POR_CLASE: "1" }), ia })(peticion());
+    await crearFoto({ ...deps({ REFERENCIAS_POR_CLASE: "1" }), ia })(peticion(FIXTURE, {}, "grano_seco"));
+    expect(ia.llamadas[0]!.ejemplos).toHaveLength(4);
+    expect(ia.llamadas[1]!.ejemplos).toEqual([]);
+  });
+});
+
+describe("bloquesEjemplos (lo que ve la IA)", () => {
+  it("sin ejemplos no agrega nada", () => expect(bloquesEjemplos([])).toEqual([]));
+
+  it("nota, cada foto con su etiqueta, y un rótulo que separa la foto del productor", () => {
+    const b = bloquesEjemplos([{ descripcion: "Grano violeta", imagenBase64: "QUJD" }, { descripcion: "Mazorca sana", imagenBase64: "REVG" }]);
+    expect(b.map((x) => x.type)).toEqual(["text", "image", "text", "image", "text", "text"]);
+    expect((b[0] as { text: string }).text).toBe(NOTA_EJEMPLOS);
+    expect((b[2] as { text: string }).text).toBe("Ejemplo de referencia: Grano violeta");
+    expect((b[5] as { text: string }).text).toContain("ÚNICA que debes analizar");
+  });
+
+  it("la nota dice que los ejemplos pueden ser distintos y que no se copie la etiqueta", () => {
+    expect(NOTA_EJEMPLOS).toContain("No copies la etiqueta");
+    expect(NOTA_EJEMPLOS).toContain("baja tu confianza");
   });
 });

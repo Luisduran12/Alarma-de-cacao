@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { ZodType } from "zod";
+import { NOTA_EJEMPLOS } from "./prompts.js";
+import type { EjemploReferencia } from "./referencias.js";
 
 export interface UsoIA {
   tokensEntrada: number;
@@ -49,7 +51,25 @@ export interface ClienteIA {
     texto: string;
     maxTokens: number;
     esquema: ZodType<T>;
+    /** Fotos de ejemplo (con su etiqueta) que van ANTES de la foto del productor. */
+    ejemplos?: EjemploReferencia[];
   }): Promise<RespuestaEstructurada<T>>;
+}
+
+/**
+ * Los ejemplos van primero, cada foto seguida de su etiqueta, y al final un rótulo que separa la
+ * foto del productor de los ejemplos (sin él la IA podría analizar un ejemplo por error).
+ */
+export function bloquesEjemplos(ejemplos: EjemploReferencia[]) {
+  if (ejemplos.length === 0) return [];
+  return [
+    { type: "text" as const, text: NOTA_EJEMPLOS },
+    ...ejemplos.flatMap((e) => [
+      { type: "image" as const, source: { type: "base64" as const, media_type: "image/jpeg" as const, data: e.imagenBase64 } },
+      { type: "text" as const, text: `Ejemplo de referencia: ${e.descripcion}` },
+    ]),
+    { type: "text" as const, text: "FIN DE LOS EJEMPLOS. La siguiente foto es la del productor y es la ÚNICA que debes analizar:" },
+  ];
 }
 
 function paradaDe(razon: string | null | undefined): Parada {
@@ -121,8 +141,9 @@ export function crearClienteIA(opciones: { cliente?: Anthropic } = {}): ClienteI
       }
     },
 
-    async analizarImagen<T>({ modelo, sistema, imagenBase64, texto, maxTokens, esquema }: {
+    async analizarImagen<T>({ modelo, sistema, imagenBase64, texto, maxTokens, esquema, ejemplos = [] }: {
       modelo: string; sistema: string; imagenBase64: string; texto: string; maxTokens: number; esquema: ZodType<T>;
+      ejemplos?: EjemploReferencia[];
     }) {
       try {
         const r = await obtener().messages.parse({
@@ -133,6 +154,7 @@ export function crearClienteIA(opciones: { cliente?: Anthropic } = {}): ClienteI
             {
               role: "user",
               content: [
+                ...bloquesEjemplos(ejemplos),
                 { type: "image", source: { type: "base64", media_type: "image/jpeg", data: imagenBase64 } },
                 { type: "text", text: texto },
               ],

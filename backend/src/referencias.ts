@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
@@ -14,7 +14,12 @@ import type { ModoFoto } from "./prompts.js";
  * es algo que se tiene que MEDIR con `npm run evaluar` antes de pagar por ellos.
  */
 export const MAX_POR_CLASE = 5;
-export const DIRECTORIO_REFERENCIAS = fileURLToPath(new URL("../referencias/", import.meta.url));
+/** Junto al código y, si el despliegue lo movió, relativo a donde corre el proceso (vercel.json: includeFiles). */
+function buscarDirectorio(): string {
+  const candidatos = [fileURLToPath(new URL("../referencias/", import.meta.url)), join(process.cwd(), "referencias"), join(process.cwd(), "backend", "referencias")];
+  return candidatos.find((d) => existsSync(join(d, "manifest.json"))) ?? candidatos[0]!;
+}
+export const DIRECTORIO_REFERENCIAS = buscarDirectorio();
 
 const Entrada = z
   .object({
