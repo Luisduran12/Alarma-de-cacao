@@ -23,7 +23,10 @@ import '../widgets/lugar_texto.dart';
 import '../services/lugar_service.dart';
 import '../widgets/selector_lote_dialog.dart';
 import 'confirmar_volteada_screen.dart';
+import 'chat_screen.dart';
 import 'guia_prueba_corte_screen.dart';
+import '../services/chat_historial.dart';
+import '../services/chat_service.dart';
 
 class DetalleLoteScreen extends StatefulWidget {
   final Lote lote;
@@ -33,8 +36,11 @@ class DetalleLoteScreen extends StatefulWidget {
   final LoteService? loteService;
   final AlarmScheduler? scheduler;
   final LugarService? lugarService;
+  final ChatHistorial? chatHistorial;
+  final ChatService? chatService;
 
-  const DetalleLoteScreen({super.key, required this.lote, this.loteService, this.scheduler, this.lugarService});
+  const DetalleLoteScreen(
+      {super.key, required this.lote, this.loteService, this.scheduler, this.lugarService, this.chatHistorial, this.chatService});
 
   @override
   State<DetalleLoteScreen> createState() => _DetalleLoteScreenState();
@@ -491,6 +497,17 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
                   onChanged: _recordatoriosActivos == null ? null : _cambiarRecordatorios,
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: FilledButton.tonalIcon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => ChatScreen(
+                        lote: _lote, loteService: _loteService, historial: widget.chatHistorial, chat: widget.chatService))),
+                icon: const Icon(Icons.forum_outlined),
+                label: const Text('Preguntar sobre mi lote'),
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: OutlinedButton.icon(
