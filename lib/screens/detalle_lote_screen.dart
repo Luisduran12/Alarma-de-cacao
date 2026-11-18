@@ -26,20 +26,25 @@ import 'guia_prueba_corte_screen.dart';
 class DetalleLoteScreen extends StatefulWidget {
   final Lote lote;
 
-  const DetalleLoteScreen({super.key, required this.lote});
+  /// Se pueden cambiar en pruebas; por defecto usan la base de datos y las
+  /// notificaciones reales.
+  final LoteService? loteService;
+  final AlarmScheduler? scheduler;
+
+  const DetalleLoteScreen({super.key, required this.lote, this.loteService, this.scheduler});
 
   @override
   State<DetalleLoteScreen> createState() => _DetalleLoteScreenState();
 }
 
 class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
-  final LoteService _loteService = LoteService();
+  late final LoteService _loteService = widget.loteService ?? LoteService();
   final _fmt = DateFormat('dd/MM/yyyy HH:mm');
   late Lote _lote;
   CurvaIdeal _ideal = CurvaIdeal.vacia;
   Lote? _comparado; // segundo lote superpuesto en la curva
   final _curvaKey = GlobalKey(); // para exportar la curva como imagen
-  final _scheduler = AlarmScheduler();
+  late final AlarmScheduler _scheduler = widget.scheduler ?? AlarmScheduler();
   bool? _recordatoriosActivos; // null = todavía no se sabe
 
   @override
@@ -91,7 +96,12 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
   }
 
   void _aviso(String texto) {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
+    if (!mounted) return;
+    // Cada aviso reemplaza al anterior: si no, al tocar el interruptor dos veces
+    // se vería primero un mensaje que ya no es cierto.
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(texto)));
   }
 
   Future<File> _escribirTemporal(String nombre, List<int> bytes) async {

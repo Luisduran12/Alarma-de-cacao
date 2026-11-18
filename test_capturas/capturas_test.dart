@@ -20,7 +20,9 @@ import 'package:alarmacacao5_0/models/volteada.dart';
 import 'package:alarmacacao5_0/screens/comparacion_lotes_screen.dart';
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
 import 'package:alarmacacao5_0/screens/detalle_lote_screen.dart';
+import 'package:alarmacacao5_0/screens/guia_prueba_corte_screen.dart';
 import 'package:alarmacacao5_0/screens/home_screen.dart';
+import 'package:alarmacacao5_0/screens/reglas_alerta_screen.dart';
 import 'package:alarmacacao5_0/services/exportar_curva.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
 import 'package:alarmacacao5_0/widgets/curva_lote_chart.dart';
@@ -75,6 +77,7 @@ Volteada _reg(String lote, int horas, double t, double h, String obs,
 }
 
 late Lote _loteDetalle;
+late Lote _loteCurso;
 
 Future<void> _sembrarDatos() async {
   final servicio = LoteService(cancelarNotificacion: (_) async {});
@@ -82,7 +85,7 @@ Future<void> _sembrarDatos() async {
 
   // Lote en curso (para la pantalla principal)
   final inicioCurso = ahora.subtract(const Duration(hours: 60));
-  await servicio.addLote(Lote(
+  _loteCurso = Lote(
     id: 'curso',
     title: 'Lote finca La Esperanza',
     status: 'en proceso',
@@ -105,7 +108,8 @@ Future<void> _sembrarDatos() async {
           confirmada: false,
         ),
     ],
-  ));
+  );
+  await servicio.addLote(_loteCurso);
 
   // Lote terminado con curva, secado y resultado (detalle y comparación)
   final ini = ahora.subtract(const Duration(days: 12));
@@ -251,5 +255,44 @@ void main() {
     });
     await t.pumpWidget(const SizedBox());
     debugDisableShadows = true;
+  });
+
+  // ---- Fase 2: alertas y recordatorios (datos de EJEMPLO, no medidos) ----
+
+  testWidgets('fase2 reglas de alerta',
+      (t) => _capturar(t, const ReglasAlertaScreen(), 'fase2/f2_reglas_alerta.png', alto: 1250));
+
+  testWidgets('fase2 guia de la prueba de corte',
+      (t) => _capturar(t, const GuiaPruebaCorteScreen(), 'fase2/f2_guia_prueba_corte.png', alto: 5600));
+
+  testWidgets('fase2 detalle con interruptor de recordatorios',
+      (t) => _capturar(t, DetalleLoteScreen(lote: _loteCurso), 'fase2/f2_detalle_recordatorios.png', alto: 1500,
+              interaccion: (t) async {
+            // Espera a que cargue el estado de los recordatorios (lee la base de datos).
+            for (var i = 0; i < 10; i++) {
+              await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
+              await t.pump(const Duration(milliseconds: 60));
+            }
+          }));
+
+  testWidgets('fase2 aviso de valor fuera de rango al guardar', (t) async {
+    SharedPreferences.setMockInitialValues({'migrado_a_sqlite_v1': true});
+    await _capturar(
+      t,
+      ConfirmarVolteadaScreen(loteId: 'curso', volteadaId: 'curso-p72', notificarAlerta: (_, __) async {}),
+      'fase2/f2_aviso_fuera_de_rango.png',
+      alto: 1100,
+      interaccion: (t) async {
+        final campos = find.byType(TextFormField);
+        await t.enterText(campos.at(0), '41,5');
+        await t.enterText(campos.at(1), '85');
+        await t.enterText(campos.at(5), 'Masa fría, poco olor a vinagre');
+        await t.tap(find.text('Guardar datos'));
+        for (var i = 0; i < 10; i++) {
+          await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
+          await t.pump(const Duration(milliseconds: 60));
+        }
+      },
+    );
   });
 }

@@ -26,6 +26,8 @@ class IlustracionCorte extends StatelessWidget {
   Widget build(BuildContext context) {
     if (tipo == TipoIlustracion.ninguna) return const SizedBox.shrink();
     final c = Theme.of(context).colorScheme;
+    // El texto dibujado debe usar la misma fuente que el resto de la app.
+    final fuente = DefaultTextStyle.of(context).style.fontFamily;
     return Semantics(
       // container: sin esto la descripción se fusiona con la tarjeta que la contiene
       // y un lector de pantalla anunciaría toda la tarjeta como si fuera una imagen.
@@ -37,7 +39,8 @@ class IlustracionCorte extends StatelessWidget {
           height: alto,
           width: double.infinity,
           child: CustomPaint(
-            painter: _Pintor(tipo, principal: c.primary, trazo: c.onSurfaceVariant, fondo: c.surfaceContainerHighest),
+            painter: _Pintor(tipo,
+                principal: c.primary, trazo: c.onSurfaceVariant, fondo: c.surfaceContainerHighest, fuente: fuente),
           ),
         ),
       ),
@@ -48,7 +51,8 @@ class IlustracionCorte extends StatelessWidget {
 class _Pintor extends CustomPainter {
   final TipoIlustracion tipo;
   final Color principal, trazo, fondo;
-  _Pintor(this.tipo, {required this.principal, required this.trazo, required this.fondo});
+  final String? fuente;
+  _Pintor(this.tipo, {required this.principal, required this.trazo, required this.fondo, this.fuente});
 
   Paint get _relleno => Paint()..color = principal;
   Paint get _linea => Paint()
@@ -67,7 +71,8 @@ class _Pintor extends CustomPainter {
 
   void _texto(Canvas canvas, String t, Offset centro, {double tam = 14}) {
     final tp = TextPainter(
-      text: TextSpan(text: t, style: TextStyle(color: trazo, fontSize: tam, fontWeight: FontWeight.w600)),
+      text: TextSpan(
+          text: t, style: TextStyle(color: trazo, fontSize: tam, fontWeight: FontWeight.w600, fontFamily: fuente)),
       textDirection: TextDirection.ltr,
     )..layout();
     tp.paint(canvas, centro - Offset(tp.width / 2, tp.height / 2));
@@ -160,5 +165,6 @@ class _Pintor extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_Pintor old) => old.tipo != tipo || old.principal != principal || old.trazo != trazo;
+  bool shouldRepaint(_Pintor old) =>
+      old.tipo != tipo || old.principal != principal || old.trazo != trazo || old.fuente != fuente;
 }
