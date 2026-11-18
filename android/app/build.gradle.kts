@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.alarmacacao5_0"
+    namespace = "com.luisduran.cacaolight"
     compileSdk = 35 // 🔺 actualizado a SDK 35
     ndkVersion = "27.0.12077973"
 
@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.alarmacacao5_0"
+        applicationId = "com.luisduran.cacaolight"
         minSdk = 23
         targetSdk = 35 // 🔺 actualizado a SDK 35
         versionCode = flutter.versionCode

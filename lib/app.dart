@@ -9,13 +9,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Alarma Cacao 5.0',
+      title: 'Cacao Light 4.0',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
       ),
       home: HomeScreen(
-        title: 'Alarma Cacao',
+        title: 'Cacao Light 4.0',
         notificationPayload: notificationPayload,
       ),
     );

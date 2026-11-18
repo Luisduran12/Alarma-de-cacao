@@ -1,4 +1,4 @@
-package com.example.alarmacacao5_0
+package com.luisduran.cacaolight
 
 import android.content.Intent
 import android.location.LocationManager
