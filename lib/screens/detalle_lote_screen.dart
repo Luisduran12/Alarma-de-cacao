@@ -151,6 +151,55 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
     }
   }
 
+  /// Calidad del grano y observación del resultado (para comparar lotes).
+  Future<void> _editarResultado() async {
+    String? calidad = _lote.calidadResultado;
+    final obsCtrl = TextEditingController(text: _lote.observacionResultado ?? '');
+
+    final guardar = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setLocal) => AlertDialog(
+          title: const Text('Resultado del grano'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: calidad,
+                decoration: const InputDecoration(labelText: 'Calidad'),
+                items: [
+                  for (final c in Calidad.todas) DropdownMenuItem(value: c, child: Text(Calidad.nombre(c))),
+                ],
+                onChanged: (v) => setLocal(() => calidad = v),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: obsCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Observación del resultado',
+                  hintText: 'Prueba de corte, color, aroma, % de granos violetas…',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Guardar')),
+          ],
+        ),
+      ),
+    );
+
+    if (guardar == true) {
+      await _loteService.updateLote(_lote.copyWith(
+        calidadResultado: calidad,
+        observacionResultado: obsCtrl.text.trim(),
+      ));
+      await _recargar();
+    }
+  }
+
   Future<void> _eliminarLote() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -203,6 +252,16 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
             Text('🔁 Estado: ${_lote.status}'),
             Text('🧪 Plantilla: ${Plantillas.nombre(_lote.plantilla)}'),
             if (_lote.finCiclo != null) Text('⏱️ Fin del ciclo: ${_fmt.format(_lote.finCiclo!)}'),
+            _seccion('🏆 Resultado del grano'),
+            Card(
+              child: ListTile(
+                title: Text('Calidad: ${Calidad.nombre(_lote.calidadResultado)}'),
+                subtitle: Text((_lote.observacionResultado ?? '').isEmpty
+                    ? 'Sin observación. Evalúa el grano al terminar para poder comparar lotes.'
+                    : _lote.observacionResultado!),
+                trailing: TextButton(onPressed: _editarResultado, child: const Text('Evaluar')),
+              ),
+            ),
             _seccion('📈 Curva de temperatura y humedad'),
             CurvaLoteChart(
               registros: _confirmadas,

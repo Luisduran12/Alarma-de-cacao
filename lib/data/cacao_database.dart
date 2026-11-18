@@ -11,7 +11,9 @@ import 'migracion_prefs.dart';
 ///               humedad, observación, latitud, longitud, etapa).
 class CacaoDatabase {
   static const String nombreArchivo = 'cacao_light.db';
-  static const int version = 1;
+  /// v1: tablas lotes y registros.
+  /// v2: resultado del grano en lotes (calidad_resultado, observacion_resultado).
+  static const int version = 2;
 
   static Future<Database>? _instancia;
 
@@ -35,6 +37,9 @@ class CacaoDatabase {
         version: version,
         onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
         onCreate: (db, _) => crearTablas(db),
+        onUpgrade: (db, anterior, _) async {
+          if (anterior < 2) await _agregarResultado(db);
+        },
       ),
     );
   }
@@ -48,7 +53,9 @@ class CacaoDatabase {
         creado_en     TEXT NOT NULL,
         inicio_ciclo  TEXT,
         fin_ciclo     TEXT,
-        plantilla     TEXT
+        plantilla     TEXT,
+        calidad_resultado      TEXT,
+        observacion_resultado  TEXT
       )
     ''');
     await db.execute('''
@@ -69,5 +76,10 @@ class CacaoDatabase {
       )
     ''');
     await db.execute('CREATE INDEX idx_registros_lote ON registros(lote_id)');
+  }
+
+  static Future<void> _agregarResultado(DatabaseExecutor db) async {
+    await db.execute('ALTER TABLE lotes ADD COLUMN calidad_resultado TEXT');
+    await db.execute('ALTER TABLE lotes ADD COLUMN observacion_resultado TEXT');
   }
 }

@@ -1,6 +1,30 @@
 // lib/models/lote.dart
 import 'package:alarmacacao5_0/models/volteada.dart';
 
+/// Calidad del grano al terminar el beneficio.
+class Calidad {
+  static const excelente = 'excelente';
+  static const buena = 'buena';
+  static const regular = 'regular';
+  static const mala = 'mala';
+
+  static const todas = [excelente, buena, regular, mala];
+
+  static String nombre(String? c) => switch (c) {
+        excelente => 'Excelente',
+        buena => 'Buena',
+        regular => 'Regular',
+        mala => 'Mala',
+        _ => 'Sin evaluar',
+      };
+
+  /// Orden para comparar: menor = mejor. Sin evaluar va al final.
+  static int rango(String? c) {
+    final i = todas.indexOf(c ?? '');
+    return i == -1 ? todas.length : i;
+  }
+}
+
 /// Un lote de cacao en beneficio. Se guarda en la tabla `lotes`;
 /// sus volteadas/registros en la tabla `registros`.
 class Lote {
@@ -18,6 +42,11 @@ class Lote {
   /// 'fedecacao_144', 'predeterminada', 'personalizada' o null.
   final String? plantilla;
 
+  /// Resultado del grano al terminar (ver [Calidad]) y su observación
+  /// (por ejemplo, la prueba de corte). Se usan para comparar lotes.
+  final String? calidadResultado;
+  final String? observacionResultado;
+
   Lote({
     required this.id,
     required this.title,
@@ -27,6 +56,8 @@ class Lote {
     this.inicioCiclo,
     this.finCiclo,
     this.plantilla,
+    this.calidadResultado,
+    this.observacionResultado,
   });
 
   Lote copyWith({
@@ -38,6 +69,8 @@ class Lote {
     DateTime? inicioCiclo,
     DateTime? finCiclo,
     String? plantilla,
+    String? calidadResultado,
+    String? observacionResultado,
   }) {
     return Lote(
       id: id ?? this.id,
@@ -48,6 +81,8 @@ class Lote {
       inicioCiclo: inicioCiclo ?? this.inicioCiclo,
       finCiclo: finCiclo ?? this.finCiclo,
       plantilla: plantilla ?? this.plantilla,
+      calidadResultado: calidadResultado ?? this.calidadResultado,
+      observacionResultado: observacionResultado ?? this.observacionResultado,
     );
   }
 
@@ -72,6 +107,8 @@ class Lote {
       'inicioCiclo': inicioCiclo?.toIso8601String(),
       'finCiclo': finCiclo?.toIso8601String(),
       'plantilla': plantilla,
+      'calidadResultado': calidadResultado,
+      'observacionResultado': observacionResultado,
     };
   }
 
@@ -88,6 +125,8 @@ class Lote {
       inicioCiclo: DateTime.tryParse(json['inicioCiclo'] ?? ''),
       finCiclo: DateTime.tryParse(json['finCiclo'] ?? ''),
       plantilla: json['plantilla'],
+      calidadResultado: json['calidadResultado'],
+      observacionResultado: json['observacionResultado'],
     );
   }
 
@@ -100,6 +139,8 @@ class Lote {
         'inicio_ciclo': inicioCiclo?.toIso8601String(),
         'fin_ciclo': finCiclo?.toIso8601String(),
         'plantilla': plantilla,
+        'calidad_resultado': calidadResultado,
+        'observacion_resultado': observacionResultado,
       };
 
   static Lote fromRow(Map<String, Object?> r, List<Volteada> volteadas) {
@@ -111,6 +152,8 @@ class Lote {
       inicioCiclo: DateTime.tryParse((r['inicio_ciclo'] as String?) ?? ''),
       finCiclo: DateTime.tryParse((r['fin_ciclo'] as String?) ?? ''),
       plantilla: r['plantilla'] as String?,
+      calidadResultado: r['calidad_resultado'] as String?,
+      observacionResultado: r['observacion_resultado'] as String?,
       volteadas: volteadas,
     );
   }
