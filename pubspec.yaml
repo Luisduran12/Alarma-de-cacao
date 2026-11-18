@@ -35,12 +35,15 @@ dependencies:
   # 🔔 Notificaciones y zonas horarias
   flutter_local_notifications: ^19.4.0
   timezone: ^0.10.1
+  sqflite: ^2.4.6
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.13.1 # ✅ Íconos personalizados
+  sqflite_common_ffi: ^2.4.7
 
 flutter_icons: # ✅ Configuración del ícono de app
   android: true
