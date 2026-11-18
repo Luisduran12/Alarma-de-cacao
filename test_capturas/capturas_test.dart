@@ -6,6 +6,7 @@
 //
 // Las fuentes se cargan desde el SDK de Flutter (Roboto e íconos) y, si existe,
 // la fuente de emojis de Windows; en otro sistema los emojis salen como cuadros.
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:alarmacacao5_0/data/cacao_database.dart';
 import 'package:alarmacacao5_0/models/lote.dart';
 import 'package:alarmacacao5_0/models/volteada.dart';
+import 'package:alarmacacao5_0/screens/chat_screen.dart';
 import 'package:alarmacacao5_0/screens/comparacion_lotes_screen.dart';
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
 import 'package:alarmacacao5_0/screens/detalle_lote_screen.dart';
@@ -27,6 +29,8 @@ import 'package:alarmacacao5_0/screens/clima_screen.dart';
 import 'package:alarmacacao5_0/screens/guia_prueba_corte_screen.dart';
 import 'package:alarmacacao5_0/screens/home_screen.dart';
 import 'package:alarmacacao5_0/screens/reglas_alerta_screen.dart';
+import 'package:alarmacacao5_0/services/chat_historial.dart';
+import 'package:alarmacacao5_0/services/chat_service.dart';
 import 'package:alarmacacao5_0/services/clima_service.dart';
 import 'package:alarmacacao5_0/services/exportar_curva.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
@@ -375,4 +379,68 @@ void main() {
 
   testWidgets('fase3 detalle con el lugar del punto de secado',
       (t) => _capturar(t, DetalleLoteScreen(lote: _loteDetalle), 'fase3/f3_detalle_lugar.png', alto: 2800));
+
+  // ---- Fase 5: chat del lote ----
+  // OJO: la respuesta "de la IA" de estas capturas es TEXTO DE EJEMPLO escrito para la prueba
+  // (un servidor simulado). No es una respuesta real de Anthropic. Las respuestas de la
+  // "guía del teléfono" sí son las reales que arma la app con su base de conocimiento.
+  ChatService chatSimulado(http.Response Function() responder) => ChatService(
+        cliente: MockClient((_) async => responder()),
+        urlServidor: 'https://api.cacaolight.example/v1',
+        idInstalacion: () async => '3f2b8c1e-9d4a-4b7e-8a1c-0e5d6f7a8b9c',
+      );
+  final chatSinServidor = ChatService(cliente: MockClient((_) async => throw http.ClientException('sin red')), urlServidor: '');
+
+  Future<void> esperarChat(WidgetTester t) async {
+    for (var i = 0; i < 10; i++) {
+      await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 60)));
+      await t.pump(const Duration(milliseconds: 60));
+    }
+  }
+
+  Future<void> preguntar(WidgetTester t, String texto) async {
+    await t.tap(find.text(texto));
+    await esperarChat(t);
+  }
+
+  Future<void> limpiarChat(WidgetTester t) => t.runAsync(() => ChatHistorial().borrar('curso')).then((_) {});
+
+  testWidgets('fase5 chat vacio con las preguntas rapidas', (t) async {
+    await limpiarChat(t);
+    await _capturar(t, ChatScreen(lote: _loteCurso, chat: chatSinServidor), 'fase5/f5_chat_vacio.png', alto: 1000,
+        interaccion: (t) => t.pump(const Duration(seconds: 1)));
+  });
+
+  testWidgets('fase5 chat sin internet responde con la guia del telefono', (t) async {
+    await limpiarChat(t);
+    await _capturar(t, ChatScreen(lote: _loteCurso, chat: chatSinServidor), 'fase5/f5_chat_sin_internet.png', alto: 1700,
+        interaccion: (t) => preguntar(t, '¿Está normal mi temperatura?'));
+  });
+
+  testWidgets('fase5 chat con IA (respuesta simulada de ejemplo)', (t) async {
+    await limpiarChat(t);
+    final chat = chatSimulado(() => http.Response.bytes(
+        utf8.encode(jsonEncode({
+          'respuesta': 'EJEMPLO SIMULADO: Voltee el grano cada 24 horas, pasándolo de un cajón a otro [F1].',
+          'fuentes': [{'id': 'F1', 'fuente': 'x'}],
+          'truncada': false,
+          'aviso': 'x',
+        })),
+        200,
+        headers: {'content-type': 'application/json; charset=utf-8'}));
+    await _capturar(t, ChatScreen(lote: _loteCurso, chat: chat), 'fase5/f5_chat_con_ia_simulada.png', alto: 1500,
+        interaccion: (t) => preguntar(t, '¿Cuándo volteo?'));
+  });
+
+  testWidgets('fase5 chat con limite del servidor y guia del telefono', (t) async {
+    await limpiarChat(t);
+    final chat = chatSimulado(() => http.Response.bytes(
+        utf8.encode(jsonEncode({'error': {'codigo': 'limite_dia', 'mensaje': 'Hoy ya hizo muchas preguntas. Vuelva mañana.'}})), 429,
+        headers: {'content-type': 'application/json; charset=utf-8'}));
+    await _capturar(t, ChatScreen(lote: _loteCurso, chat: chat), 'fase5/f5_chat_limite.png', alto: 1900,
+        interaccion: (t) => preguntar(t, '¿Cómo seco mi cacao?'));
+  });
+
+  testWidgets('fase5 detalle del lote con el boton del chat',
+      (t) => _capturar(t, DetalleLoteScreen(lote: _loteCurso), 'fase5/f5_detalle_boton_chat.png', alto: 1900));
 }
