@@ -73,6 +73,27 @@ void main() {
     });
   });
 
+  test('no une con una recta un registro de fermentación con uno de secado', () {
+    // 100 h y 120 h fermentación (dentro de 45-50 °C); a las 168 h ya es secado (33 °C).
+    // El tramo 120 h -> 168 h NO debe contarse como "fuera de rango".
+    final r = ResumenCurva.calcular(
+      [_reg(100, 46), _reg(120, 45), _reg(168, 33, etapa: Etapa.secado)],
+      _inicio,
+    );
+    expect(r.horasConReferencia, closeTo(20, 0.1));
+    expect(r.horasFuera, 0);
+  });
+
+  test('sigue contando el tramo entre dos registros de la misma etapa', () {
+    final r = ResumenCurva.calcular(
+      [_reg(100, 30, etapa: Etapa.secado), _reg(130, 40, etapa: Etapa.secado)],
+      _inicio,
+    );
+    // Secado: solo hay tope de 50 °C, todo está dentro, 30 h comparables.
+    expect(r.horasConReferencia, closeTo(30, 0.1));
+    expect(r.horasFuera, 0);
+  });
+
   group('tendencia (última lectura vs la anterior)', () {
     test('un solo registro: pocos datos', () {
       expect(ResumenCurva.calcular([_reg(10, 30)], _inicio).tendencia, Tendencia.pocosDatos);

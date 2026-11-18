@@ -117,6 +117,7 @@ class CurvaLoteChart extends StatelessWidget {
                 children: [
                   _GraficaTemperatura(
                     conf: conf,
+                    inicio: inicio,
                     puntos: temp,
                     fuera: fuera,
                     comparada: tempComp,
@@ -218,6 +219,7 @@ LineChartBarData _bordeBanda(List<FlSpot> pts) => LineChartBarData(
 
 class _GraficaTemperatura extends StatelessWidget {
   final List<Volteada> conf;
+  final DateTime inicio;
   final List<FlSpot> puntos, comparada;
   final List<bool> fuera;
   final CurvaIdeal ideal;
@@ -227,6 +229,7 @@ class _GraficaTemperatura extends StatelessWidget {
 
   const _GraficaTemperatura({
     required this.conf,
+    required this.inicio,
     required this.puntos,
     required this.fuera,
     required this.comparada,
@@ -246,10 +249,15 @@ class _GraficaTemperatura extends StatelessWidget {
     final tema = Theme.of(context);
     final superficie = tema.colorScheme.surface;
 
-    // Banda de fermentación: desde su hora de inicio hasta que empieza el secado.
+    // Banda de fermentación: desde su hora de inicio hasta el último registro de
+    // fermentación (si ya hay secado) o hasta el final de la gráfica.
+    final ultimaFerm = conf.where((v) => v.etapa == Etapa.fermentacion).lastOrNull;
     const rf = ReferenciasCurva.fermentacionTemperatura;
     final bandaIni = rf.desdeHora!;
-    final bandaFin = (horaPrimerSecado ?? maxX).clamp(bandaIni, maxX);
+    final bandaFin = (horaPrimerSecado == null || ultimaFerm == null
+            ? maxX
+            : ultimaFerm.fecha.difference(inicio).inMinutes / 60.0)
+        .clamp(bandaIni, maxX);
     final hayBanda = bandaFin > bandaIni && puntos.any((p) => p.x <= bandaFin);
 
     // Tope de secado (solo máximo): línea punteada desde el primer registro de secado.

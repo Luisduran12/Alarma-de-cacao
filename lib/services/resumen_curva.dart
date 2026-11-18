@@ -8,7 +8,9 @@ enum Tendencia { subiendo, bajando, estable, pocosDatos }
 /// Solo usa registros confirmados. Las "horas fuera de rango" se ESTIMAN
 /// uniendo con una recta cada par de lecturas seguidas (no hay medidas entre
 /// una y otra) y contando solo las horas en que existe una banda de
-/// referencia (ver [ReferenciasCurva]).
+/// referencia (ver [ReferenciasCurva]). No se une con recta un registro de
+/// fermentación con uno de secado: entre ellos cambió la etapa y no se sabe
+/// qué pasó, así que esas horas no se cuentan.
 class ResumenCurva {
   final int registros;
   final double? tempMaxima;
@@ -51,6 +53,7 @@ class ResumenCurva {
     var fuera = 0.0, conRef = 0.0;
     for (var i = 0; i < pts.length - 1; i++) {
       final a = pts[i], b = pts[i + 1];
+      if (a.etapa != b.etapa) continue;
       final total = b.fecha.difference(a.fecha);
       if (total <= Duration.zero) continue;
       for (var t = Duration.zero; t < total; t += _paso) {

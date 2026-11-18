@@ -78,6 +78,14 @@ void main() {
     expect(pintor(2), isA<FlDotSquarePainter>());
   });
 
+  testWidgets('con secado, la banda de fermentación termina en el último registro de fermentación', (t) async {
+    final r = [_reg(60, 46), _reg(100, 47), _reg(130, 40, etapa: Etapa.secado), _reg(150, 42, etapa: Etapa.secado)];
+    await t.pumpWidget(_app(CurvaLoteChart(registros: r, inicio: _inicio)));
+    final d = _datosTemp(t);
+    expect(d.betweenBarsData, hasLength(1));
+    expect(d.lineBarsData[0].spots.last.x, 100, reason: 'no se extiende hasta el primer registro de secado (130 h)');
+  });
+
   testWidgets('la descripción accesible dice cuántos registros están fuera de rango', (t) async {
     final h = t.ensureSemantics();
     await t.pumpWidget(_app(CurvaLoteChart(registros: registros, inicio: _inicio, nombre: 'Lote A')));
