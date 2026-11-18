@@ -41,7 +41,7 @@ class _ConfigurarLoteScreenState extends State<ConfigurarLoteScreen> {
             titulo: 'Alarma Volteada',
             cuerpo: mensaje,
             fechaProgramada: fechaProgramada,
-            payload: '$loteId|$titulo|$mensaje|${fechaProgramada.toIso8601String()}',
+            payload: NotificationService.payloadVolteada(loteId, idVolteada),
           );
 
           volteadas.add(

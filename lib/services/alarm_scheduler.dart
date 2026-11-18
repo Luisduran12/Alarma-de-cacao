@@ -91,7 +91,7 @@ class AlarmScheduler {
           titulo: 'Volteada ${i + 1} - ${lote.title}',
           cuerpo: 'Es hora de voltear el cacao. Toca para registrar temperatura y humedad.',
           fechaProgramada: scheduledDate,
-          payload: '${lote.id}|${lote.title}|$mensaje|${scheduledDate.toIso8601String()}',
+          payload: NotificationService.payloadVolteada(lote.id, volteadaId),
         );
 
         nuevasVolteadas.add(

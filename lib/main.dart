@@ -27,7 +27,17 @@ void main() async {
   await NotificationService().init(); // Inicializa notificaciones
   await NotificationService().solicitarPermisos(); // Notificaciones + alarmas exactas
 
+  // Si la app se abrió tocando una notificación con la app cerrada,
+  // se abre el formulario de esa volteada cuando el Navigator esté listo.
+  final argsLanzamiento = await NotificationService().argumentosDeLanzamiento();
+
   runApp(const MyApp());
+
+  if (argsLanzamiento != null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navigatorKey.currentState?.pushNamed('/confirmar', arguments: argsLanzamiento);
+    });
+  }
 }
 
 Future<void> _solicitarPermisos() async {
@@ -72,13 +82,12 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => ConfigurarLoteScreen());
           case '/confirmar':
             final args = settings.arguments;
-            if (args is Map<String, dynamic> &&
-                args.containsKey('loteId') &&
-                args.containsKey('mensaje')) {
+            if (args is Map && args['loteId'] is String) {
               return MaterialPageRoute(
                 builder: (_) => ConfirmarVolteadaScreen(
-                  loteId: args['loteId'],
-                  mensaje: args['mensaje'],
+                  loteId: args['loteId'] as String,
+                  volteadaId: (args['volteadaId'] as String?) ?? '',
+                  mensaje: (args['mensaje'] as String?) ?? '',
                 ),
               );
             } else {

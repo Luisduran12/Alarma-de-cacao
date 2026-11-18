@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:alarmacacao5_0/models/volteada.dart';
-import 'package:alarmacacao5_0/models/lote.dart';
-import 'package:alarmacacao5_0/services/volteada_service.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
 
 class ConfirmarVolteadaScreen extends StatefulWidget {
   final String loteId;
+  final String volteadaId;
   final String mensaje;
 
   const ConfirmarVolteadaScreen({
     super.key,
     required this.loteId,
-    required this.mensaje,
+    this.volteadaId = '',
+    this.mensaje = '',
   });
 
   @override
@@ -25,7 +25,6 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
   final _humedadController = TextEditingController();
   final _observacionController = TextEditingController();
 
-  final _volteadaService = VolteadaService();
   final _loteService = LoteService();
 
   bool _guardando = false;
@@ -49,46 +48,50 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
     final ahora = DateTime.now();
 
     final lote = await _loteService.obtenerLotePorId(widget.loteId);
-    DateTime fechaProgramada = ahora;
-
-    if (lote != null) {
-      final volteadaOriginal = lote.volteadas.firstWhere(
-        (v) => v.mensaje == widget.mensaje,
-        orElse: () => Volteada(fecha: ahora, fechaProgramada: ahora, id: '', loteId: '', mensaje: '', temperatura: 0, humedad: 0, observacion: '', confirmada: false),
+    if (lote == null) {
+      if (!mounted) return;
+      setState(() => _guardando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se encontró el lote de esta volteada.')),
       );
-      fechaProgramada = volteadaOriginal.fechaProgramada;
+      return;
     }
 
-    final nuevaVolteada = Volteada(
-      id: const Uuid().v4(),
+    // Se busca la volteada PROGRAMADA (por id; o por mensaje en alarmas antiguas)
+    // y se ACTUALIZA. Antes se agregaba una nueva volteada cada vez: duplicados.
+    final volteadas = List<Volteada>.from(lote.volteadas);
+    int index = widget.volteadaId.isNotEmpty
+        ? volteadas.indexWhere((v) => v.id == widget.volteadaId)
+        : volteadas.indexWhere((v) => v.mensaje == widget.mensaje && !v.confirmada);
+
+    final base = index == -1 ? null : volteadas[index];
+    final registro = Volteada(
+      id: base?.id ?? const Uuid().v4(),
       loteId: widget.loteId,
-      mensaje: widget.mensaje,
+      mensaje: base?.mensaje ?? widget.mensaje,
       temperatura: temperatura,
       humedad: humedad,
       observacion: observacion,
       fecha: ahora,
-      fechaProgramada: fechaProgramada,
+      fechaProgramada: base?.fechaProgramada ?? ahora,
       confirmada: true,
     );
-
-    await _volteadaService.guardarVolteada(nuevaVolteada);
-
-    // Comprobar si se completó el lote
-    final confirmadas = await _volteadaService.obtenerConfirmadasDelLote(widget.loteId);
-    if (lote != null && confirmadas.length >= lote.volteadas.length) {
-      final loteCompletado = lote.copyWith(status: 'completado');
-      await _loteService.updateLote(loteCompletado);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('🎉 Lote completado')),
-      );
+    if (index == -1) {
+      volteadas.add(registro);
+    } else {
+      volteadas[index] = registro;
     }
 
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✅ Volteada confirmada')),
-    );
+    final completado = volteadas.every((v) => v.confirmada);
+    await _loteService.updateLote(lote.copyWith(
+      volteadas: volteadas,
+      status: completado ? 'completado' : lote.status,
+    ));
 
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(completado ? '🎉 Lote completado' : '✅ Volteada confirmada')),
+    );
     Navigator.pop(context);
   }
 
@@ -125,7 +128,7 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
                 '🧾 Lote ID: ${widget.loteId}',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              Text(
+              if (widget.mensaje.isNotEmpty) Text(
                 '📅 Alarma: ${widget.mensaje}',
                 style: const TextStyle(fontSize: 14),
               ),

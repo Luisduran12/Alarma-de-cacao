@@ -7,7 +7,6 @@ import 'package:csv/csv.dart';
 
 import '../models/lote.dart';
 import '../models/volteada.dart';
-import '../services/volteada_service.dart';
 import '../services/lote_service.dart';
 
 class DetalleLoteScreen extends StatefulWidget {
@@ -20,7 +19,6 @@ class DetalleLoteScreen extends StatefulWidget {
 }
 
 class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
-  final VolteadaService _volteadaService = VolteadaService();
   final LoteService _loteService = LoteService();
   late Lote _lote;
   List<Volteada> _volteadasDelLote = [];
@@ -33,10 +31,15 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
   }
 
   Future<void> _cargarVolteadas() async {
-    final todas = await _volteadaService.cargarVolteadas();
-    final filtradas = todas.where((v) => v.loteId == _lote.id).toList()
+    // Las volteadas viven dentro del lote (una sola fuente de datos).
+    final lote = await _loteService.obtenerLotePorId(_lote.id) ?? _lote;
+    final filtradas = lote.volteadas.where((v) => v.confirmada).toList()
       ..sort((a, b) => b.fecha.compareTo(a.fecha));
-    setState(() => _volteadasDelLote = filtradas);
+    if (!mounted) return;
+    setState(() {
+      _lote = lote;
+      _volteadasDelLote = filtradas;
+    });
   }
 
   Future<void> _exportarCSV() async {

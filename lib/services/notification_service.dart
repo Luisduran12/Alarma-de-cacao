@@ -2,15 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
-import 'package:uuid/uuid.dart';
 
-import 'package:alarmacacao5_0/services/lote_service.dart';
-import 'package:alarmacacao5_0/models/lote.dart';
-import 'package:alarmacacao5_0/models/volteada.dart';
 import 'package:alarmacacao5_0/main.dart'; // Para navigatorKey
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-final LoteService _globalLoteService = LoteService();
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
@@ -59,70 +54,43 @@ class NotificationService {
     }
   }
 
-  /// Manejo de respuesta cuando el usuario toca una notificación
-  static Future<void> _handleNotificationResponse(NotificationResponse response) async {
-    final payload = response.payload;
-    if (payload == null || payload.trim().isEmpty) {
-      debugPrint('⚠️ Payload vacío');
-      return;
-    }
+  /// Payload de una volteada: "v2|<loteId>|<volteadaId>".
+  static String payloadVolteada(String loteId, String volteadaId) => 'v2|$loteId|$volteadaId';
 
+  /// Convierte un payload en argumentos para la ruta '/confirmar'.
+  /// Acepta el formato nuevo (v2) y el antiguo "loteId|titulo|mensaje|fecha".
+  static Map<String, String>? argumentosDesdePayload(String? payload) {
+    if (payload == null || payload.trim().isEmpty) return null;
     final parts = payload.split('|');
-    if (parts.length < 4) {
-      debugPrint('⚠️ Payload incompleto: $payload');
+    if (parts.length == 3 && parts[0] == 'v2') {
+      return {'loteId': parts[1], 'volteadaId': parts[2], 'mensaje': ''};
+    }
+    if (parts.length >= 4) {
+      return {'loteId': parts[0], 'volteadaId': '', 'mensaje': parts[2]};
+    }
+    return null;
+  }
+
+  /// Al tocar la notificación SOLO se abre el formulario de confirmación.
+  /// Antes, además de abrir el formulario, se guardaba aquí una volteada
+  /// "confirmada" vacía, y el formulario guardaba otra: registros duplicados.
+  static Future<void> _handleNotificationResponse(NotificationResponse response) async {
+    final args = argumentosDesdePayload(response.payload);
+    if (args == null) {
+      debugPrint('⚠️ Payload no reconocido: ${response.payload}');
       return;
     }
+    navigatorKey.currentState?.pushNamed('/confirmar', arguments: args);
+  }
 
-    final loteId = parts[0];
-    final loteTitle = parts[1];
-    final mensaje = parts[2];
-    final fechaStr = parts[3];
-
-    final fechaProgramada = DateTime.tryParse(fechaStr) ?? DateTime.now();
-
-    // Redireccionar a pantalla de confirmación
-    navigatorKey.currentState?.pushNamed(
-      '/confirmar',
-      arguments: {'loteId': loteId, 'mensaje': mensaje},
-    );
-
-    // Actualizar Volteada como confirmada si no existe
-    final lotes = await _globalLoteService.loadLotes();
-    final index = lotes.indexWhere((l) => l.id == loteId);
-
-    if (index == -1) {
-      debugPrint('❌ Lote no encontrado: $loteId');
-      return;
+  /// Si la app se abrió desde una notificación (estando cerrada), devuelve
+  /// los argumentos para abrir el formulario de esa volteada.
+  Future<Map<String, String>?> argumentosDeLanzamiento() async {
+    final details = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+    if (details?.didNotificationLaunchApp ?? false) {
+      return argumentosDesdePayload(details!.notificationResponse?.payload);
     }
-
-    final lote = lotes[index];
-    final volteadas = List<Volteada>.from(lote.volteadas ?? []);
-    final existe = volteadas.any((v) => v.mensaje == mensaje && v.confirmada);
-
-    if (existe) {
-      debugPrint('⚠️ Volteada ya confirmada: "$mensaje"');
-      return;
-    }
-
-    volteadas.add(
-      Volteada(
-        id: const Uuid().v4(),
-        loteId: loteId,
-        mensaje: mensaje,
-        temperatura: 0.0,
-        humedad: 0.0,
-        observacion: '',
-        fecha: DateTime.now(),
-        fechaProgramada: fechaProgramada,
-        confirmada: true,
-      ),
-    );
-
-    final loteActualizado = lote.copyWith(volteadas: volteadas);
-    lotes[index] = loteActualizado;
-    await _globalLoteService.saveLotes(lotes);
-
-    debugPrint('✅ Volteada registrada en lote $loteTitle ($loteId)');
+    return null;
   }
 
   /// Mostrar una notificación inmediata
