@@ -5,6 +5,9 @@ import 'package:alarmacacao5_0/models/lote.dart';
 import 'package:alarmacacao5_0/models/volteada.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
+import 'package:alarmacacao5_0/services/notification_ids.dart';
+import 'package:alarmacacao5_0/services/notification_service.dart';
+import 'package:alarmacacao5_0/services/reglas_alerta.dart';
 
 /// Formulario de registro de una volteada (se abre al tocar la alarma) o de
 /// un registro nuevo del lote (por ejemplo, durante el secado).
@@ -20,11 +23,20 @@ class ConfirmarVolteadaScreen extends StatefulWidget {
   /// Solo para alarmas antiguas sin volteadaId.
   final String mensaje;
 
+  /// Se pueden cambiar en pruebas; por defecto usan la base de datos, las reglas
+  /// guardadas en el teléfono y una notificación local (todo sin internet).
+  final LoteService? loteService;
+  final Future<List<ReglaAlerta>> Function()? cargarReglas;
+  final Future<void> Function(String titulo, String cuerpo)? notificarAlerta;
+
   const ConfirmarVolteadaScreen({
     super.key,
     required this.loteId,
     this.volteadaId = '',
     this.mensaje = '',
+    this.loteService,
+    this.cargarReglas,
+    this.notificarAlerta,
   });
 
   @override
@@ -39,7 +51,7 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
   final _phController = TextEditingController();
   final _brixController = TextEditingController();
   final _tempAmbienteController = TextEditingController();
-  final _loteService = LoteService();
+  late final LoteService _loteService = widget.loteService ?? LoteService();
 
   Lote? _lote;
   Volteada? _base; // registro programado que se está confirmando
@@ -160,11 +172,70 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
       await _loteService.actualizarEstado(lote.id, 'completado');
     }
 
+    await _avisarAlertas(lote, registro, ahora);
+
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(completado ? '🎉 Todas las volteadas registradas' : '✅ Registro guardado')),
     );
     Navigator.pop(context, true);
+  }
+
+  /// Compara el registro con las reglas de alerta y, si algún valor sale de
+  /// rango, avisa con una notificación local y con un cuadro en pantalla.
+  /// Nada de esto necesita internet. Un fallo aquí nunca impide guardar el registro.
+  Future<void> _avisarAlertas(Lote lote, Volteada registro, DateTime ahora) async {
+    List<AlertaDisparada> alertas;
+    try {
+      final reglas = await (widget.cargarReglas ?? ReglasAlertaStorage.cargar)();
+      final inicio = lote.inicioCiclo ?? lote.createdAt;
+      alertas = EvaluadorAlertas.evaluar(registro, ahora.difference(inicio).inMinutes / 60.0, reglas);
+    } catch (e) {
+      debugPrint('No se pudieron evaluar las alertas: $e');
+      return;
+    }
+    if (alertas.isEmpty) return;
+
+    final titulo = 'Alerta - ${lote.title}';
+    final cuerpo = alertas.map((a) => a.texto).join('\n');
+    try {
+      await (widget.notificarAlerta ?? _notificarLocal)(titulo, cuerpo);
+    } catch (e) {
+      debugPrint('No se pudo mostrar la notificación de alerta: $e');
+    }
+
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded, size: 40),
+        title: Text(alertas.length == 1 ? 'Atención: un valor fuera de rango' : 'Atención: ${alertas.length} valores fuera de rango'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final a in alertas) ...[
+                Text(a.texto, style: Theme.of(context).textTheme.bodyLarge),
+                const SizedBox(height: 4),
+                Text('Fuente: ${a.regla.fuente}', style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 12),
+              ],
+              const Text('Es una guía, no reemplaza al técnico.'),
+            ],
+          ),
+        ),
+        actions: [FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Entendido'))],
+      ),
+    );
+  }
+
+  static Future<void> _notificarLocal(String titulo, String cuerpo) async {
+    await NotificationService().mostrarNotificacion(
+      id: await NotificationIds.siguiente(),
+      titulo: titulo,
+      cuerpo: cuerpo,
+    );
   }
 
   /// Vacío = null (el campo es opcional). Acepta coma decimal.
