@@ -14,6 +14,8 @@ import 'package:alarmacacao5_0/services/lote_service.dart';
 import 'package:alarmacacao5_0/services/lugar_service.dart';
 import 'package:alarmacacao5_0/services/lugares_offline.dart';
 
+const _idPrueba = '3f2b8c1e-9d4a-4b7e-8a1c-0e5d6f7a8b9c';
+
 const _lista = '''
 {"fuente":"DANE","licencia":"CC BY-SA 4.0","corte":"2024-12-30","departamentos":["Norte de Santander"],
 "lugares":[["Chinácota","Chinácota",0,7.603112,-72.601162,"M"],["Hatoviejo","Durania",0,7.77449,-72.69209,"C"]]}
@@ -31,6 +33,7 @@ void main() {
   late Database db;
   late LoteService lotes;
   late List<Uri> pedidos;
+  late List<http.Request> peticiones;
   late List<Duration> pausas;
   late http.Response Function(Uri) responder;
 
@@ -38,9 +41,11 @@ void main() {
         database: () async => db,
         cliente: MockClient((r) async {
           pedidos.add(r.url);
+          peticiones.add(r);
           return responder(r.url);
         }),
         urlServidor: url,
+        idInstalacion: () async => _idPrueba,
         lista: () async => LugaresOffline.desdeJson(_lista),
         esperar: (d) async => pausas.add(d),
         ahora: () => DateTime.utc(2026, 11, 18),
@@ -57,6 +62,7 @@ void main() {
     db = await CacaoDatabase.abrir(databaseFactoryFfi, inMemoryDatabasePath);
     lotes = LoteService(database: () async => db, cancelarNotificacion: (_) async {});
     pedidos = [];
+    peticiones = [];
     pausas = [];
     responder = (_) => ok('Chinácota, Norte de Santander, Colombia');
   });
@@ -100,11 +106,16 @@ void main() {
   });
 
   group('resolver (una consulta al servidor)', () {
-    test('manda solo lat/lng con 3 decimales, sin ninguna clave', () async {
+    test('es un POST con lat/lng (3 decimales) en el CUERPO, el ID de instalación en una cabecera y sin ninguna clave', () async {
       await servicio().resolver(7.603112, -72.601162);
-      final u = pedidos.single;
-      expect(u.toString(), 'https://api.cacaolight.example/v1/lugar?lat=7.603&lng=-72.601');
-      expect(u.query.toLowerCase(), isNot(contains('key')));
+      final p = peticiones.single;
+      expect(p.method, 'POST');
+      expect(p.url.toString(), 'https://api.cacaolight.example/v1/lugar', reason: 'sin coordenadas en la URL');
+      expect(jsonDecode(p.body), {'lat': 7.603, 'lng': -72.601});
+      expect(p.headers['X-Install-Id'], _idPrueba);
+      expect(p.headers['Content-Type'], contains('application/json'));
+      expect(p.url.query, isEmpty);
+      expect(p.headers.keys.map((k) => k.toLowerCase()), isNot(contains('authorization')));
     });
 
     test('la URL base puede terminar en "/"', () async {

@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:sqflite/sqflite.dart';
 
 import '../data/cacao_database.dart';
+import 'instalacion_id.dart';
 import 'lugares_offline.dart';
 
 enum OrigenLugar { servidor, listaOffline }
@@ -30,9 +31,11 @@ class NombreLugar {
 ///  - CON internet: el servidor (endpoint `/lugar`, Fase 4) resuelve el nombre con
 ///    Nominatim y lo guarda en caché. Acá se guarda en la tabla `lugares`.
 ///
-/// Contrato del servidor: `GET {BACKEND_URL}/lugar?lat=7.603&lng=-72.601` responde
-/// 200 `{"nombre": "...", "fuente": "© colaboradores de OpenStreetMap"}`, 404 o 204
-/// si no hay resultado, 429 si se pasó del límite. Sin `BACKEND_URL` configurada la
+/// Contrato del servidor: `POST {BACKEND_URL}/lugar` con el cuerpo `{"lat": 7.603, "lng": -72.601}`
+/// y la cabecera `X-Install-Id` (ID de instalación anónimo). Responde 200
+/// `{"nombre": "...", "fuente": "© colaboradores de OpenStreetMap (ODbL)"}`, 404 si no hay
+/// resultado, 429 si se pasó del límite. Las coordenadas van en el cuerpo y no en la URL
+/// para que no queden en los registros de la plataforma. Sin `BACKEND_URL` configurada la
 /// app funciona igual con la lista offline.
 class LugarService {
   /// Dirección del servidor (no es un secreto): `--dart-define=BACKEND_URL=https://...`.
@@ -51,6 +54,7 @@ class LugarService {
   final Future<void> Function(Duration) _esperar;
   final DateTime Function() _ahora;
   final Duration _timeout;
+  final Future<String> Function() _idInstalacion;
 
   LugarService({
     Future<Database> Function()? database,
@@ -60,13 +64,15 @@ class LugarService {
     Future<void> Function(Duration)? esperar,
     DateTime Function()? ahora,
     Duration? timeout,
+    Future<String> Function()? idInstalacion,
   })  : _db = database ?? CacaoDatabase.instancia,
         _cliente = cliente ?? http.Client(),
         _servidor = _leerUrl(urlServidor ?? urlPorDefecto),
         _lista = lista ?? LugaresOffline.cargar,
         _esperar = esperar ?? ((d) => Future<void>.delayed(d)),
         _ahora = ahora ?? DateTime.now,
-        _timeout = timeout ?? const Duration(seconds: 12);
+        _timeout = timeout ?? const Duration(seconds: 12),
+        _idInstalacion = idInstalacion ?? InstalacionId.obtener;
 
   static Uri? _leerUrl(String texto) {
     if (texto.trim().isEmpty) return null;
@@ -146,10 +152,15 @@ class LugarService {
     final k = clave(lat, lng);
     final partes = k.split(',');
     final ruta = '${base.path.endsWith('/') ? base.path.substring(0, base.path.length - 1) : base.path}/lugar';
-    final url = base.replace(path: ruta, queryParameters: {'lat': partes[0], 'lng': partes[1]});
+    final url = base.replace(path: ruta);
+    final cuerpo = jsonEncode({'lat': double.parse(partes[0]), 'lng': double.parse(partes[1])});
 
     try {
-      final r = await _cliente.get(url).timeout(_timeout);
+      final r = await _cliente
+          .post(url,
+              headers: {'Content-Type': 'application/json', 'X-Install-Id': await _idInstalacion()},
+              body: cuerpo)
+          .timeout(_timeout);
       if (r.statusCode == 404 || r.statusCode == 204) {
         await _guardar(k, '', _origenSinResultado, '');
         return const _SinResultado();
