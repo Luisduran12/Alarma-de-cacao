@@ -10,6 +10,7 @@ import '../models/lote.dart';
 import '../models/volteada.dart';
 import '../services/lote_service.dart';
 import '../services/plantillas.dart';
+import '../widgets/curva_lote_chart.dart';
 import 'confirmar_volteada_screen.dart';
 
 class DetalleLoteScreen extends StatefulWidget {
@@ -202,7 +203,11 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
             Text('🔁 Estado: ${_lote.status}'),
             Text('🧪 Plantilla: ${Plantillas.nombre(_lote.plantilla)}'),
             if (_lote.finCiclo != null) Text('⏱️ Fin del ciclo: ${_fmt.format(_lote.finCiclo!)}'),
-            const SizedBox(height: 12),
+            _seccion('📈 Curva de temperatura y humedad'),
+            CurvaLoteChart(
+              registros: _confirmadas,
+              inicio: _lote.inicioCiclo ?? _confirmadas.firstOrNull?.fecha ?? _lote.createdAt,
+            ),
             _seccion('📍 Punto de secado'),
             if (punto == null)
               const Text('Aún no hay registros de secado con ubicación.')
