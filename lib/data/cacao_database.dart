@@ -8,6 +8,7 @@ import 'migracion_prefs.dart';
 /// Tablas:
 ///  - lotes:     un lote de cacao en beneficio.
 ///  - recordatorios: avisos de medir la temperatura (no son registros).
+///  - lugares:   caché de nombres de lugar resueltos por el servidor.
 ///  - registros: volteadas programadas y datos medidos (fecha, temperatura,
 ///               humedad, observación, latitud, longitud, etapa y, opcionales,
 ///               pH, Brix y temperatura ambiente).
@@ -17,7 +18,8 @@ class CacaoDatabase {
   /// v2: resultado del grano en lotes (calidad_resultado, observacion_resultado).
   /// v3: pH, Brix y temperatura ambiente opcionales en registros.
   /// v4: tabla recordatorios (avisos de medir la temperatura cada 12 h).
-  static const int version = 4;
+  /// v5: tabla lugares (nombres de lugar resueltos por el servidor, como caché).
+  static const int version = 5;
 
   static Future<Database>? _instancia;
 
@@ -45,6 +47,7 @@ class CacaoDatabase {
           if (anterior < 2) await _agregarResultado(db);
           if (anterior < 3) await _agregarMedidasOpcionales(db);
           if (anterior < 4) await _crearRecordatorios(db);
+          if (anterior < 5) await _crearLugares(db);
         },
       ),
     );
@@ -86,6 +89,22 @@ class CacaoDatabase {
     ''');
     await db.execute('CREATE INDEX idx_registros_lote ON registros(lote_id)');
     await _crearRecordatorios(db);
+    await _crearLugares(db);
+  }
+
+  /// Caché de nombres de lugar: la clave son las coordenadas redondeadas a 3
+  /// decimales (≈ 110 m). Solo guarda lo que respondió el servidor; el nombre de
+  /// la lista offline se calcula al momento y no se guarda.
+  static Future<void> _crearLugares(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE lugares (
+        clave        TEXT PRIMARY KEY,
+        nombre       TEXT NOT NULL,
+        origen       TEXT NOT NULL,
+        fuente       TEXT NOT NULL DEFAULT '',
+        resuelto_en  TEXT NOT NULL
+      )
+    ''');
   }
 
   /// Avisos programados que NO son registros del lote (por ejemplo, "medir la

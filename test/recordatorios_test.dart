@@ -154,7 +154,7 @@ void main() {
     setUp(() => dir = Directory.systemTemp.createTempSync('cacao_v4_'));
     tearDown(() => dir.deleteSync(recursive: true));
 
-    test('una base v3 con datos pasa a v4 sin perder nada y con la tabla vacía', () async {
+    test('una base v3 con datos pasa a la versión actual sin perder nada y con la tabla vacía', () async {
       final ruta = p.join(dir.path, 'cacao.db');
       // Crea una base v3 REAL: las tablas de la versión actual sin `recordatorios`.
       final v3 = await databaseFactoryFfi.openDatabase(
@@ -183,7 +183,7 @@ void main() {
 
       final db = await CacaoDatabase.abrir(databaseFactoryFfi, ruta);
       addTearDown(db.close);
-      expect(await db.getVersion(), 4);
+      expect(await db.getVersion(), CacaoDatabase.version);
       expect((await db.query('lotes')).single['titulo'], 'Lote v3');
       final reg = (await db.query('registros')).single;
       expect([reg['temperatura'], reg['ph'], reg['observacion']], [46.5, 4.5, 'ok']);
