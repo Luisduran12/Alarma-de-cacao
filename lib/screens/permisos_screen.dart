@@ -3,7 +3,7 @@ import 'package:alarmacacao5_0/services/location_service.dart';
 import 'home_screen.dart';
 
 class PermisosScreen extends StatefulWidget {
-  const PermisosScreen({Key? key}) : super(key: key);
+  const PermisosScreen({super.key});
 
   @override
   State<PermisosScreen> createState() => _PermisosScreenState();
@@ -26,24 +26,31 @@ class _PermisosScreenState extends State<PermisosScreen> {
     });
     try {
       final posicion = await LocationService().obtenerUbicacionActual(context);
+      if (!mounted) return;
       setState(() {
         _mensaje = 'Ubicación obtenida: Lat ${posicion.latitude}, Lon ${posicion.longitude}';
       });
       // Navegar a HomeScreen tras éxito
-      Future.delayed(const Duration(seconds: 2), () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen(title: 'Alarma Cacao')),
-        );
-      });
+      Future.delayed(const Duration(seconds: 2), _continuar);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _mensaje = 'Error al obtener ubicación: $e';
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  void _continuar() {
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const HomeScreen(title: 'Cacao Light 4.0')),
+    );
   }
 
   @override
@@ -71,6 +78,12 @@ class _PermisosScreenState extends State<PermisosScreen> {
                     ElevatedButton(
                       onPressed: _probarPermisos,
                       child: const Text('Reintentar Solicitar Permisos'),
+                    ),
+                    const SizedBox(height: 12),
+                    // Sin GPS la app debe seguir funcionando (alarmas y registros).
+                    TextButton(
+                      onPressed: _continuar,
+                      child: const Text('Continuar sin ubicación'),
                     ),
                   ],
                 ),
