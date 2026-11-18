@@ -1,0 +1,1508 @@
+{
+ "version": 1,
+ "revisado": "2026-11-18",
+ "temas": [
+  "cosecha",
+  "fermentacion",
+  "volteo",
+  "prueba_corte",
+  "secado",
+  "defectos",
+  "almacenamiento",
+  "calidad",
+  "enfermedades"
+ ],
+ "fuentes": {
+  "fhia2017": {
+   "corta": "FHIA, InfoCacao No. 14 (2017)",
+   "titulo": "Actividades de poscosecha para lograr cacao de calidad (boletín InfoCacao No. 14)",
+   "autor": "FHIA, proyecto PROCACAHO (FUNDER, FHIA, APROCACAHO; apoyo de COSUDE), Honduras",
+   "anio": 2017,
+   "url": "https://fhia.org.hn/wp-content/uploads/InfoCacao_No14_Sept_2017.pdf",
+   "nota": "Es de Honduras: confirmar con su técnico o asociación en Colombia."
+  },
+  "lasalle2022": {
+   "corta": "U. de La Salle / FEDECACAO (Medina et al., 2022)",
+   "titulo": "Cacao antioqueño: la sinfonía microbiana, química y sensorial",
+   "autor": "Universidad de Antioquia, Unilasallista Corporación Universitaria, con FEDECACAO (Sistema General de Regalías, Gobernación de Antioquia)",
+   "anio": 2022,
+   "url": "https://repository.unilasallista.edu.co/bitstreams/e9c09d20-867b-40ff-a4cf-cb68fbdbb3d1/download",
+   "nota": "Estudio en Antioquia (Bajo Cauca, Magdalena Medio y Urabá)."
+  },
+  "ica2012": {
+   "corta": "ICA con Fedecacao (2012)",
+   "titulo": "Manejo fitosanitario del cultivo del cacao (Theobroma cacao L.): medidas para la temporada invernal",
+   "autor": "Instituto Colombiano Agropecuario (ICA), con Ministerio de Agricultura, Colombia Humanitaria y Fedecacao",
+   "anio": 2012,
+   "url": "https://www.ica.gov.co/getattachment/c01fa43b-cf48-497a-aa7f-51e6da3f7e96/-",
+   "nota": "Se usan solo síntomas y manejo cultural. Sus recomendaciones con productos y dosis NO se incluyen."
+  }
+ },
+ "pendientes": [
+  "El texto de la NTC 1252 (norma de pago de ICONTEC): tamaño de muestra y límites por grado. Por eso la app no da porcentajes mínimos de calidad.",
+  "Cómo se ve por dentro cada grupo de la prueba de corte (pizarroso, pasilla, violeta...): no hay fuente leída que lo describa.",
+  "Rangos para las primeras 48 horas de fermentación, pH y Brix.",
+  "Productos y dosis contra plagas y enfermedades: no se incluyen a propósito. Consulte a un técnico, a su asociación o a FEDECACAO.",
+  "Otras enfermedades y plagas (rosellinia, monalonion, ceratocystis) aparecen en el manual del ICA pero no se resumieron todavía.",
+  "Documentos propios de FEDECACAO y tesis colombianas: solo se usó el estudio de La Salle/Antioquia (con FEDECACAO) y el manual del ICA (con Fedecacao)."
+ ],
+ "fragmentos": [
+  {
+   "id": "cos-01",
+   "tema": "cosecha",
+   "titulo": "Qué mazorcas cosechar",
+   "texto": "Coseche todas las mazorcas maduras, las sobremaduras y las dañadas por plagas y enfermedades. Cosechar cada quince días o menos reduce la cantidad de mazorcas sobremaduras y dañadas. Solo las mazorcas maduras y sanas se fermentan bien.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 1",
+   "citas": [
+    {
+     "p": 1,
+     "t": "Solo las mazorcas maduras y sanas se fermentan bien y sirven para obtener cacao de alta calidad."
+    }
+   ],
+   "palabras": [
+    "cosecha",
+    "cosechar",
+    "mazorca",
+    "madura",
+    "sobremadura",
+    "sana",
+    "quince dias"
+   ]
+  },
+  {
+   "id": "cos-02",
+   "tema": "cosecha",
+   "titulo": "Separar las mazorcas antes de fermentar",
+   "texto": "Ponga juntas las mazorcas maduras y pintonas que estén sanas. Las sobremaduras, enfermas y dañadas por plagas (como el pájaro carpintero y la ardilla) van en otro grupo. Los granos de las maduras y pintonas se fermentan juntos para la mejor calidad. Descarte las mazorcas con granos germinados, enfermos y dañados.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 2",
+   "citas": [
+    {
+     "p": 2,
+     "t": "Se deben descartar las mazorcas con granos germinados, enfermos y dañados."
+    }
+   ],
+   "palabras": [
+    "clasificar",
+    "separar",
+    "mazorca",
+    "enferma",
+    "danada",
+    "germinado",
+    "descartar",
+    "plaga",
+    "pajaro carpintero",
+    "ardilla",
+    "pintona"
+   ]
+  },
+  {
+   "id": "cos-03",
+   "tema": "cosecha",
+   "titulo": "Sacar los granos de la mazorca",
+   "texto": "Parta la mazorca de preferencia el mismo día de la cosecha, o máximo dos días después. Los granos heridos afectan la calidad final: parta con un golpe suave y saque los granos con los dedos. Use recipientes limpios (cajas de madera, cubetas de plástico o sacos con forro de plástico); no se recomiendan los de metal.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 2",
+   "citas": [
+    {
+     "p": 2,
+     "t": "Después de cosechadas y clasificadas las mazorcas se deben partir de preferencia el mismo día para extraer el grano en baba, o máximo dos días después de la cosecha."
+    }
+   ],
+   "palabras": [
+    "partir",
+    "quebrar",
+    "extraer",
+    "granos",
+    "baba",
+    "recipiente",
+    "metal",
+    "guantes"
+   ]
+  },
+  {
+   "id": "ferm-01",
+   "tema": "fermentacion",
+   "titulo": "Llevar el grano al beneficio",
+   "texto": "Lleve los granos frescos (en baba) al beneficio lo más pronto posible, antes de que pasen seis horas después de sacarlos. El recipiente de transporte debe estar lavado y muy limpio.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 3",
+   "citas": [
+    {
+     "p": 3,
+     "t": "deben llevarse al beneficio lo más pronto posible, antes de que pasen seis horas después de extraído el grano."
+    }
+   ],
+   "palabras": [
+    "baba",
+    "seis horas",
+    "beneficio",
+    "transporte",
+    "fermentacion",
+    "fermentar"
+   ]
+  },
+  {
+   "id": "ferm-02",
+   "tema": "fermentacion",
+   "titulo": "Cómo debe ser el cajón de fermentación",
+   "texto": "Fermente el cacao en cajones de madera, con clavos o tornillos que no toquen el cacao. El fondo lleva orificios de 1 cm de diámetro separados 10 cm x 10 cm para que escurra el líquido los primeros dos o tres días. La altura del cajón no debe pasar de 60 cm, y debe estar protegido del sol, la lluvia y el viento.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 3",
+   "citas": [
+    {
+     "p": 3,
+     "t": "Es importante que la altura de los cajones no pase de los 60 cm"
+    },
+    {
+     "p": 3,
+     "t": "orificios de 1.0 cm de diámetro separados a 10 cm x 10 cm en el fondo"
+    }
+   ],
+   "palabras": [
+    "cajon",
+    "cajones",
+    "madera",
+    "orificios",
+    "drenaje",
+    "altura",
+    "60 cm",
+    "fermentacion",
+    "fermentar"
+   ]
+  },
+  {
+   "id": "ferm-03",
+   "tema": "fermentacion",
+   "titulo": "Llenar y tapar el cajón",
+   "texto": "Llene el cajón hasta 5 cm o 10 cm del borde de arriba y tape el grano con hojas de plátano. Esto ayuda a mantener el calor que necesita la fermentación.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 3",
+   "citas": [
+    {
+     "p": 3,
+     "t": "Se debe llenar el cajón hasta 5 cm o 10 cm del borde superior y luego tapar el grano con hojas de plátano."
+    }
+   ],
+   "palabras": [
+    "tapar",
+    "hojas de platano",
+    "calor",
+    "llenar",
+    "cajon",
+    "fermentacion"
+   ]
+  },
+  {
+   "id": "ferm-04",
+   "tema": "fermentacion",
+   "titulo": "Temperatura de la masa en la fermentación",
+   "texto": "Ponga un termómetro dentro del centro de la masa. La temperatura debe subir y mantenerse arriba de 45 °C a partir del tercer día, y puede llegar a 50 °C o más en los días siguientes. Anote la temperatura de cada cajón todos los días. La masa se calienta sola: ese calor es necesario para una buena fermentación.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 3",
+   "citas": [
+    {
+     "p": 3,
+     "t": "verificar que la temperatura suba y se mantenga arriba de 45 ºC a partir del tercer día y aumentará hasta 50 °C o más en los días posteriores."
+    }
+   ],
+   "palabras": [
+    "temperatura",
+    "termometro",
+    "grados",
+    "45",
+    "50",
+    "caliente",
+    "fria",
+    "fria la masa",
+    "tercer dia",
+    "registro diario",
+    "masa",
+    "calor"
+   ]
+  },
+  {
+   "id": "ferm-05",
+   "tema": "fermentacion",
+   "titulo": "Cuánto dura y cómo se sabe que terminó",
+   "texto": "La fermentación dura entre 5 y 7 días según el tipo de cacao y el clima (con cacao híbrido, en promedio 5 días). Termina cuando el grano se ve rollizo o hinchado, con color carne o rojizo por fuera, y al apretarlo sale un líquido color vino o achocolatado. El olor a vinagre es menos fuerte y baja la temperatura.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 4",
+   "citas": [
+    {
+     "p": 4,
+     "t": "El proceso de fermentación dura entre 5 a 7 días, según el tipo de cacao y el clima"
+    },
+    {
+     "p": 4,
+     "t": "La fermentación termina cuando el grano adquiere un aspecto rollizo o hinchado"
+    }
+   ],
+   "palabras": [
+    "dias",
+    "cuantos dias",
+    "dura",
+    "duracion",
+    "terminar",
+    "termino",
+    "final",
+    "fin",
+    "listo",
+    "hinchado",
+    "vinagre",
+    "fermentacion",
+    "fermentar"
+   ]
+  },
+  {
+   "id": "ferm-06",
+   "tema": "fermentacion",
+   "titulo": "Cuándo parar la fermentación",
+   "texto": "Si al hacer la prueba de corte aparece un solo grano sobrefermentado, pare la fermentación, para que no aumente el porcentaje de granos sobrefermentados. Si se termina muy temprano o se deja demasiado tiempo, baja la calidad del grano.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 4",
+   "citas": [
+    {
+     "p": 4,
+     "t": "Si al hacer las pruebas de corte aparece un solo grano sobrefermentado, se debe parar la fermentación"
+    },
+    {
+     "p": 4,
+     "t": "Si se termina la fermentación muy temprano o si se deja mucho tiempo este proceso, disminuye la calidad del grano."
+    }
+   ],
+   "palabras": [
+    "parar",
+    "sobrefermentado",
+    "pasado",
+    "demasiado",
+    "temprano",
+    "fermentacion",
+    "calidad"
+   ]
+  },
+  {
+   "id": "ferm-07",
+   "tema": "fermentacion",
+   "titulo": "Qué pasa dentro de la masa",
+   "texto": "La pulpa dulce que rodea los granos (agua, azúcares, ácido cítrico y pectina) empieza con un pH de 3,5. Los microorganismos la transforman y producen alcohol y ácidos, y generan calor. Primero actúan las levaduras, luego las bacterias lácticas y al final las acéticas; la masa llega a unos 50 °C y un pH de 5.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 3, p. 4",
+   "citas": [
+    {
+     "p": 3,
+     "t": "presenta un valor de acidez inicial pH de 3.5."
+    },
+    {
+     "p": 4,
+     "t": "Estas reacciones incrementan la temperatura de la masa aproximadamente a 50 °C y un pH de 5"
+    }
+   ],
+   "palabras": [
+    "ph",
+    "acidez",
+    "pulpa",
+    "mucilago",
+    "microorganismos",
+    "levaduras",
+    "bacterias",
+    "calor",
+    "50",
+    "fermentacion",
+    "fermentar"
+   ]
+  },
+  {
+   "id": "ferm-08",
+   "tema": "volteo",
+   "titulo": "Por qué se voltea",
+   "texto": "Las bacterias que trabajan en la fermentación necesitan oxígeno para desarrollarse. Por eso voltear la masa de cacao es importante en el proceso.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 5",
+   "citas": [
+    {
+     "p": 5,
+     "t": "por lo que el volteo de la masa de cacao es importante en el proceso."
+    }
+   ],
+   "palabras": [
+    "oxigeno",
+    "bacterias",
+    "voltear",
+    "volteo",
+    "por que"
+   ]
+  },
+  {
+   "id": "ferm-09",
+   "tema": "fermentacion",
+   "titulo": "Cómo cambia el color de la pulpa",
+   "texto": "Durante la fermentación la pulpa cambia de color: va de blanco al inicio a café claro (color arequipe) al final, y eso indica el punto final. Los granos bien fermentados y secos tienen agradable aroma a cacao; los granos sin fermentar saben amargo y astringente, sin aroma a chocolate.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 8, p. 4",
+   "citas": [
+    {
+     "p": 8,
+     "t": "los cuales van desde blanco en el inicio de la fermentación a café claro (color arequipe) al final de esta indicando el punto final"
+    },
+    {
+     "p": 4,
+     "t": "Los granos sin fermentar presentan un sabor amargo y astringente sin aromas de chocolate."
+    }
+   ],
+   "palabras": [
+    "color",
+    "pulpa",
+    "blanco",
+    "arequipe",
+    "punto final",
+    "amargo",
+    "astringente",
+    "sin fermentar",
+    "aroma",
+    "fermentacion"
+   ]
+  },
+  {
+   "id": "vol-01",
+   "tema": "volteo",
+   "titulo": "Cada cuánto se voltea",
+   "texto": "Voltee el grano cada 24 horas, pasando el cacao de un cajón a otro: el grano de abajo debe quedar arriba y el de las esquinas en el centro. Use pala de madera para no herir los granos. Hágalo sin interrupción, incluso fines de semana y festivos. Si no se voltea, por falta de oxígeno se enfría la masa y la fermentación no sale bien.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 4",
+   "citas": [
+    {
+     "p": 4,
+     "t": "se realice un volteo de granos cada 24 horas, que consiste en mover el cacao de un cajón a otro."
+    },
+    {
+     "p": 4,
+     "t": "Si no se realiza el volteo, por falta de oxígeno se enfría la masa y no se logra una buena fermentación."
+    }
+   ],
+   "palabras": [
+    "voltear",
+    "volteo",
+    "voltee",
+    "cada cuanto",
+    "24 horas",
+    "cada dia",
+    "cajon",
+    "pala",
+    "oxigeno",
+    "enfria"
+   ]
+  },
+  {
+   "id": "vol-02",
+   "tema": "volteo",
+   "titulo": "Ojo con las horas de las alarmas de la app",
+   "texto": "La plantilla de 144 horas de esta app programa volteos a las 48, 72, 96 y 120 horas (viene de tesis de la UIS y la UNAD, sin verificar con un documento oficial). El boletín de FHIA indica voltear cada 24 horas. Las dos pautas no coinciden: confirme con su técnico o su asociación cuál seguir.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 4",
+   "citas": [
+    {
+     "p": 4,
+     "t": "se realice un volteo de granos cada 24 horas, que consiste en mover el cacao de un cajón a otro."
+    }
+   ],
+   "palabras": [
+    "alarma",
+    "alarmas",
+    "plantilla",
+    "144",
+    "48",
+    "72",
+    "96",
+    "120",
+    "voltear",
+    "volteo",
+    "cuando",
+    "cuando volteo",
+    "horas"
+   ],
+   "numeros_app": [
+    48,
+    72,
+    96,
+    120,
+    144
+   ]
+  },
+  {
+   "id": "corte-01",
+   "tema": "prueba_corte",
+   "titulo": "Cómo se hace la prueba de corte",
+   "texto": "Empiece a partir del cuarto día, a la hora de voltear. Saque cacao de unos 9 puntos distintos de la masa, mézclelo y separe 100 granos. Corte cada grano a lo largo y mire su interior. Si 70 a 75 de los 100 granos están bien fermentados, la fermentación es del 70 al 75 %.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 4",
+   "citas": [
+    {
+     "p": 4,
+     "t": "se toman unas 9 submuestras de varios puntos de la masa de cacao, se mezclan y se obtiene finalmente una muestra de cien granos."
+    },
+    {
+     "p": 4,
+     "t": "Cada grano se corta longitudinalmente y se observan las características internas para determinar el grado de fermentación."
+    }
+   ],
+   "palabras": [
+    "prueba de corte",
+    "corte",
+    "cortar",
+    "cien granos",
+    "100 granos",
+    "muestra",
+    "submuestras",
+    "porcentaje",
+    "bien fermentado",
+    "cuarto dia"
+   ]
+  },
+  {
+   "id": "corte-02",
+   "tema": "prueba_corte",
+   "titulo": "Los grupos en que se separan los granos",
+   "texto": "En la prueba de corte se separan los granos en: bien fermentados, insuficientemente fermentados, pizarrosos, mohosos, pasilla, germinados y dañados por insectos. Esta app no describe cómo se ve cada grupo porque no lo pudo verificar en una fuente: pida a su técnico que se lo muestre.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 10",
+   "citas": [
+    {
+     "p": 10,
+     "t": "Determinación de granos bien fermentados, insuficientemente fermentados, pizarrosos, mohosos, pasilla, germinados y dañados por insectos"
+    }
+   ],
+   "palabras": [
+    "grupos",
+    "pizarroso",
+    "pizarrosos",
+    "pasilla",
+    "moho",
+    "mohosos",
+    "germinado",
+    "insectos",
+    "insuficientemente",
+    "violeta",
+    "prueba de corte",
+    "corte"
+   ]
+  },
+  {
+   "id": "corte-03",
+   "tema": "prueba_corte",
+   "titulo": "Qué hacer cuando la fermentación está lista",
+   "texto": "Cuando la prueba de corte confirma que la fermentación es adecuada, deje reposar los granos unas horas más y detenga el proceso: pase la masa a la bandeja de secado, en una capa de unas 2 pulgadas, de 6 a 8 horas, removiéndola cada media hora y sin exponerla al sol.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 4",
+   "citas": [
+    {
+     "p": 4,
+     "t": "se detiene el proceso, pasando la masa de cacao a la bandeja de secado donde se deja en reposo en una capa de unas 2 pulg, unas 6-8 horas, removiéndolo cada media hora, sin exponerlo al sol."
+    }
+   ],
+   "palabras": [
+    "reposo",
+    "bandeja",
+    "detener",
+    "pasar a secado",
+    "listo",
+    "terminar",
+    "fermentacion",
+    "prueba de corte"
+   ]
+  },
+  {
+   "id": "sec-01",
+   "tema": "secado",
+   "titulo": "Secado al sol: cómo empezar",
+   "texto": "Seque de preferencia al sol, sobre materiales elevados del piso (como gavetas de madera), en capas de no más de 5 cm. Empiece despacio: 2 horas de sol suave el primer día, 4 horas el segundo y 6 horas el tercero. Desde el cuarto día, todo el día al sol. Cubra el cacao antes de la lluvia y de noche. Remueva con rastrillo de madera cada media hora los primeros 3 días y cada 60 minutos desde el cuarto.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 5",
+   "citas": [
+    {
+     "p": 5,
+     "t": "exponer el grano al sol suave de la mañana o la tarde por 2 horas el primer día, 4 horas el segundo día y 6 horas al tercer día."
+    }
+   ],
+   "palabras": [
+    "secar",
+    "secado",
+    "seco",
+    "sol",
+    "capas",
+    "5 cm",
+    "rastrillo",
+    "remover",
+    "lluvia",
+    "gavetas",
+    "como seco",
+    "secar cacao"
+   ]
+  },
+  {
+   "id": "sec-02",
+   "tema": "secado",
+   "titulo": "No secar demasiado rápido",
+   "texto": "El secado rápido desde el inicio es indeseable: se \"arrebata\" el cacao, o sea que se seca el exterior del grano y quedan encerrados el agua y el ácido acético (vinagre). Eso pide hasta una semana más de secado, y el grano sale con sabor ácido de baja calidad y aplanado.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 5",
+   "citas": [
+    {
+     "p": 5,
+     "t": "El secado rápido desde el inicio es indeseable puesto que se arrebata el cacao"
+    }
+   ],
+   "palabras": [
+    "arrebatar",
+    "arrebata",
+    "rapido",
+    "rapida",
+    "acido",
+    "vinagre",
+    "plano",
+    "aplanado",
+    "secado",
+    "secar"
+   ]
+  },
+  {
+   "id": "sec-03",
+   "tema": "secado",
+   "titulo": "Cuándo está seco el cacao",
+   "texto": "El secado termina a los 6 o más días, según el clima, cuando la humedad del grano está entre 6,5 y 7,0 %. La medición precisa se hace con un medidor digital de humedad para granos. Si no se seca lo suficiente, el grano se llena de moho; si se seca menos de 6,0 %, se vuelve quebradizo.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 5",
+   "citas": [
+    {
+     "p": 5,
+     "t": "cuando la humedad del grano sea de 6.5 a 7.0 %"
+    },
+    {
+     "p": 5,
+     "t": "Si no se seca suficiente, el grano se llena de moho y si se seca menos de 6.0 % se vuelve quebradizo."
+    }
+   ],
+   "palabras": [
+    "seco",
+    "humedad",
+    "6.5",
+    "7",
+    "cuando esta seco",
+    "moho",
+    "quebradizo",
+    "medidor",
+    "secado",
+    "secar",
+    "punto de secado"
+   ]
+  },
+  {
+   "id": "sec-04",
+   "tema": "secado",
+   "titulo": "Dónde no secar el cacao",
+   "texto": "No seque el cacao a la orilla del pavimento ni en patios de cemento: ahí se contamina con humo de vehículos, polvo, arena, olor de asfalto y heces u orina de animales, y baja la calidad y la limpieza.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 5",
+   "citas": [
+    {
+     "p": 5,
+     "t": "No se recomienda secar el cacao a la orilla del pavimento, ni patios de cemento."
+    }
+   ],
+   "palabras": [
+    "donde secar",
+    "pavimento",
+    "cemento",
+    "patio",
+    "asfalto",
+    "contaminacion",
+    "limpieza",
+    "secado"
+   ]
+  },
+  {
+   "id": "sec-05",
+   "tema": "secado",
+   "titulo": "Secado artificial",
+   "texto": "Si el clima no deja secar al sol, seque con aire caliente y mueva el aire con un ventilador. Empiece con temperatura baja (40 °C) moviendo la masa y suba poco a poco hasta 55 °C; de noche descanse con el horno y el ventilador apagados. Evite que el grano toque el humo de la leña o del combustible. Dura de 20 a 36 horas según el equipo.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 5, p. 6",
+   "citas": [
+    {
+     "p": 5,
+     "t": "el proceso de secado artificial se debe iniciar con temperaturas bajas (40 °C), moviendo la masa de cacao. La temperatura se debe subir poco a poco hasta alcanzar los 55 °C."
+    },
+    {
+     "p": 6,
+     "t": "Cuando el secado se hace en forma artificial, la duración puede variar entre 20 a 36 horas dependiendo del equipo y protocolo."
+    }
+   ],
+   "palabras": [
+    "artificial",
+    "secadora",
+    "horno",
+    "aire caliente",
+    "ventilador",
+    "40",
+    "55",
+    "humo",
+    "lena",
+    "combustible",
+    "secado"
+   ]
+  },
+  {
+   "id": "sec-06",
+   "tema": "secado",
+   "titulo": "Temperatura máxima de secado",
+   "texto": "Anote la temperatura de secado: no debe superar los 50 °C. Así el secado es más lento, pero se evitan sustancias indeseadas. FHIA acepta una temperatura más alta en secadora artificial (ver el fragmento de secado artificial): las dos fuentes no coinciden, y la app usa 50 °C como valor más prudente.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 7",
+   "citas": [
+    {
+     "p": 7,
+     "t": "registrar la temperatura de secado la cual no debe superar los 50ºC"
+    }
+   ],
+   "palabras": [
+    "temperatura de secado",
+    "50",
+    "maxima",
+    "calor",
+    "secadora",
+    "quemar",
+    "secado",
+    "temperatura"
+   ]
+  },
+  {
+   "id": "sec-07",
+   "tema": "secado",
+   "titulo": "Para qué se seca",
+   "texto": "El secado baja la humedad del grano a 7 %. Antes de secar, el grano es viscoso y los hongos pueden dañarlo y darle sabores a tierra, madera húmeda, acidez intensa, amargo y astringencia. Durante el secado baja el ácido acético (la acidez) y la astringencia, y se forman aromas y sabores.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 6",
+   "citas": [
+    {
+     "p": 6,
+     "t": "El secado es la etapa cuyo objetivo específico es disminuir la humedad al 7%"
+    }
+   ],
+   "palabras": [
+    "secado",
+    "humedad",
+    "7",
+    "hongos",
+    "tierra",
+    "madera humeda",
+    "acidez",
+    "astringencia",
+    "aroma",
+    "sabor"
+   ]
+  },
+  {
+   "id": "def-01",
+   "tema": "defectos",
+   "titulo": "De dónde vienen los sabores malos",
+   "texto": "Hay sabores indeseables como tierra, queso rancio, pies sudados, cebolla, carne, vinagre, grasa rancia y humo. Estos defectos pueden aparecer por usar mazorcas con algún deterioro, mazorcas inmaduras, o por fallas en la fermentación y el secado.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 8",
+   "citas": [
+    {
+     "p": 8,
+     "t": "Estos defectos pueden aparecer por el uso de mazorcas con algún deterioro, inmaduras o por deficiencias en el proceso de fermentación y secado."
+    }
+   ],
+   "palabras": [
+    "defecto",
+    "defectos",
+    "sabor",
+    "feo",
+    "malo",
+    "olor",
+    "huele",
+    "tierra",
+    "queso",
+    "cebolla",
+    "vinagre",
+    "rancio",
+    "humo",
+    "terroso"
+   ]
+  },
+  {
+   "id": "def-02",
+   "tema": "defectos",
+   "titulo": "Otros defectos de aroma y sabor",
+   "texto": "Además de los anteriores, se mencionan como defectos la madera húmeda, el moho, el carbón, la papa cruda y el pepino.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 8",
+   "citas": [
+    {
+     "p": 8,
+     "t": "además de madera húmeda, moho, carbón, papa cruda y pepino"
+    }
+   ],
+   "palabras": [
+    "defecto",
+    "moho",
+    "madera humeda",
+    "carbon",
+    "papa cruda",
+    "pepino",
+    "huele"
+   ]
+  },
+  {
+   "id": "def-03",
+   "tema": "defectos",
+   "titulo": "El humo daña el cacao",
+   "texto": "Evite que el grano tenga contacto con el humo de la leña o del combustible del secado: el olor a humo le quita calidad.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 6",
+   "citas": [
+    {
+     "p": 6,
+     "t": "que el grano tenga contacto con el humo de la leña o del combustible utilizado, porque el olor a humo demerita su calidad."
+    }
+   ],
+   "palabras": [
+    "humo",
+    "lena",
+    "combustible",
+    "olor a humo",
+    "huele a humo",
+    "secado",
+    "defecto"
+   ]
+  },
+  {
+   "id": "def-04",
+   "tema": "defectos",
+   "titulo": "Limpiar y clasificar el grano seco",
+   "texto": "Cuando el cacao está seco, limpie y clasifique: saque impurezas (cáscaras, restos de placenta, madera, ramillas, hojas, piedras) y los granos defectuosos, pequeños, dañados, quebrados, planos y todo material extraño.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 6",
+   "citas": [
+    {
+     "p": 6,
+     "t": "La clasificación consiste en sacar los granos defectuosos, pequeños, dañados, quebrados, planos y todo material extraño"
+    }
+   ],
+   "palabras": [
+    "limpiar",
+    "clasificar",
+    "impurezas",
+    "defectuosos",
+    "quebrados",
+    "planos",
+    "zaranda",
+    "grano seco"
+   ]
+  },
+  {
+   "id": "alm-01",
+   "tema": "almacenamiento",
+   "titulo": "Cómo guardar el cacao seco",
+   "texto": "Guarde el cacao clasificado en sacos de polietileno nuevos y limpios, en una bodega sin humedad y con buena ventilación. Ponga los sacos sobre tarimas, en estibas de no más de seis sacos, a 50 cm de la pared y con pasillos para que circule el aire. La bodega no debe tener ratones ni cucarachas ni animales domésticos. Rotule cada lote.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 6",
+   "citas": [
+    {
+     "p": 6,
+     "t": "los granos deben almacenarse en sacos de polietileno nuevos y limpios, en bodegas donde no haya humedad y con buena ventilación."
+    }
+   ],
+   "palabras": [
+    "guardar",
+    "almacenar",
+    "almacenamiento",
+    "bodega",
+    "sacos",
+    "tarimas",
+    "estibas",
+    "ratones",
+    "cucarachas",
+    "humedad",
+    "rotular",
+    "plagas"
+   ]
+  },
+  {
+   "id": "alm-02",
+   "tema": "almacenamiento",
+   "titulo": "Vender pronto y transportar limpio",
+   "texto": "Para evitar daños en la calidad y más costos, venda el cacao lo más pronto posible. Al transportarlo, el vehículo debe estar limpio y no llevar productos con olores fuertes, como agroquímicos, combustible, humo o aceites, que contaminan el grano.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 7",
+   "citas": [
+    {
+     "p": 7,
+     "t": "se recomienda que el cacao se comercialice lo más pronto posible."
+    },
+    {
+     "p": 7,
+     "t": "no lleve productos que despidan olores extraños, como los agroquímicos, combustible, humo o aceites que puedan contaminar el grano."
+    }
+   ],
+   "palabras": [
+    "vender",
+    "venta",
+    "transporte",
+    "vehiculo",
+    "olores",
+    "agroquimicos",
+    "combustible",
+    "almacenamiento"
+   ]
+  },
+  {
+   "id": "cal-01",
+   "tema": "calidad",
+   "titulo": "Cómo se reconoce un grano de buena calidad",
+   "texto": "Si se siguen todos los pasos, se obtiene cacao bien fermentado, seco y limpio. El grano de alta calidad tiene color de afuera café anaranjado, es rollizo (hinchado) y, sobre todo, huele agradable. Por dentro tiene textura agrietada y color café chocolate.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 7",
+   "citas": [
+    {
+     "p": 7,
+     "t": "El interior es de textura agrietada, color café chocolate."
+    }
+   ],
+   "palabras": [
+    "calidad",
+    "buena calidad",
+    "grano bueno",
+    "color",
+    "interior",
+    "agrietado",
+    "cafe chocolate",
+    "olor",
+    "rollizo"
+   ]
+  },
+  {
+   "id": "cal-02",
+   "tema": "calidad",
+   "titulo": "Pregunte qué calidad quiere el comprador",
+   "texto": "Los estándares de calidad cambian según el comprador. Antes de decidir cuándo parar la fermentación o cómo beneficiar, pregunte al comprador qué calidad desea.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 4",
+   "citas": [
+    {
+     "p": 4,
+     "t": "Los estándares de calidad varían entre los compradores"
+    }
+   ],
+   "palabras": [
+    "comprador",
+    "estandares",
+    "calidad",
+    "precio",
+    "vender"
+   ]
+  },
+  {
+   "id": "enf-01",
+   "tema": "enfermedades",
+   "titulo": "Qué es la monilia",
+   "texto": "La moniliasis la produce el hongo Moniliophthora roreri, que se alimenta de los frutos del cacao y los daña. Se da en todas las regiones cacaoteras de Colombia. Sin buen manejo en zonas húmedas son comunes pérdidas de más del 80 %; con manejo óptimo bajan a menos del 8 %. Recoja semanalmente todos los frutos enfermos antes de que esporulen (suelten polvillo): no hacerlo es la mayor causa de pérdida de la cosecha.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 8",
+   "citas": [
+    {
+     "p": 8,
+     "t": "Se deben recoger todos los frutos enfermos semanalmente antes de su esporulación (producción de polvillo)"
+    }
+   ],
+   "palabras": [
+    "monilia",
+    "moniliasis",
+    "moniliophthora",
+    "roreri",
+    "hongo",
+    "pudricion acuosa",
+    "hielo",
+    "ceniza",
+    "polvillo",
+    "esporulacion",
+    "enfermedad"
+   ]
+  },
+  {
+   "id": "enf-02",
+   "tema": "enfermedades",
+   "titulo": "Cómo se ve la monilia",
+   "texto": "Los síntomas cambian con la edad del fruto: en los pequeños, maduración prematura, marchitez o abultamientos; en los más grandes, puntos aceitosos, islas amarillentas o maduración parcial. Luego aparece una mancha color marrón o chocolate cubierta de una sustancia blancuzca, que al final se vuelve gris como ceniza: es un polvo que se suelta con el viento.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 9",
+   "citas": [
+    {
+     "p": 9,
+     "t": "Luego de los primeros síntomas, aparece una mancha color marrón o chocolate recubierta con una sustancia blancuzca."
+    }
+   ],
+   "palabras": [
+    "monilia",
+    "sintomas",
+    "mancha",
+    "marron",
+    "blancuzca",
+    "ceniza",
+    "polvo",
+    "puntos aceitosos",
+    "fruto",
+    "mazorca enferma"
+   ]
+  },
+  {
+   "id": "enf-03",
+   "tema": "enfermedades",
+   "titulo": "El RE-SE: recoger los frutos enfermos cada semana",
+   "texto": "El manejo de la monilia se basa en evitar frutos con esporas. Por eso hay que recolectar cada semana (RE-SE) todas las mazorcas con los síntomas, antes de que esporulen. Un fruto esporulado a 2 metros de altura puede infectar al 40 % de las mazorcas vecinas a 20 metros. Ayuda mantener los árboles bajos (3 a 4 metros) para alcanzar los frutos, hacer drenajes si el lote se encharca y reducir la sombra excesiva.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 10",
+   "citas": [
+    {
+     "p": 10,
+     "t": "se deben recolectar semanalmente (RE-SE) todas las mazorcas que presenten los síntomas previos a la mencionada esporulación."
+    }
+   ],
+   "palabras": [
+    "re-se",
+    "rese",
+    "semanal",
+    "recoger",
+    "retirar",
+    "frutos enfermos",
+    "mazorcas enfermas",
+    "monilia",
+    "poda",
+    "drenaje",
+    "sombra",
+    "que hago con las mazorcas enfermas"
+   ]
+  },
+  {
+   "id": "enf-04",
+   "tema": "enfermedades",
+   "titulo": "Qué es la escoba de bruja",
+   "texto": "La escoba de bruja la causa el hongo Moniliophthora perniciosa y afecta los tejidos en crecimiento. Si ataca los cojines florales, no nacen mazorcas sino brotes con apariencia de escoba. Los frutos afectados pueden tomar forma de chirimoyas, fresas o zanahorias.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 10, p. 11",
+   "citas": [
+    {
+     "p": 11,
+     "t": "no nacen mazorcas sino brotes vegetativos a manera de ramas, con apariencia de escoba."
+    }
+   ],
+   "palabras": [
+    "escoba",
+    "escoba de bruja",
+    "perniciosa",
+    "brotes",
+    "cojines florales",
+    "chirimoya",
+    "fresa",
+    "zanahoria",
+    "enfermedad"
+   ]
+  },
+  {
+   "id": "enf-05",
+   "tema": "enfermedades",
+   "titulo": "Cómo se maneja la escoba de bruja",
+   "texto": "La forma más efectiva de control es quitar a fondo los órganos enfermos (escobas y frutos) al podar. Mantenga las plantas a 4 metros como máximo, haga mínimo dos podas de mantenimiento al año (entre febrero-marzo y julio-agosto), regule la sombra, mantenga drenajes y deshierbe a tiempo. Si la enfermedad aparece por primera vez en una plantación, retire la planta de inmediato, incinérela o entiérrela y vigile con rigor. La fuente indica que no se recomienda el control químico.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 12",
+   "citas": [
+    {
+     "p": 12,
+     "t": "La forma más efectiva de control es mediante la remoción exhaustiva de los órganos enfermos, realizada en el momento de la poda del cultivo."
+    },
+    {
+     "p": 12,
+     "t": "No se recomienda el control químico."
+    }
+   ],
+   "palabras": [
+    "escoba de bruja",
+    "control",
+    "podar",
+    "poda",
+    "remocion",
+    "drenaje",
+    "sombra",
+    "deshierbe",
+    "enfermedad"
+   ]
+  },
+  {
+   "id": "enf-06",
+   "tema": "enfermedades",
+   "titulo": "Qué es la mazorca negra",
+   "texto": "La mazorca negra (fitóptora) la causa el hongo Phytophthora. En el fruto empieza con una mancha descolorida y luego se vuelve color chocolate o negra; a diferencia de la monilia, la mancha tiene límites bien definidos. La pudrición avanza de afuera hacia adentro. Los granos de la mazorca enferma siguen sanos varios días después de que empieza la infección en la cáscara. Al final la mazorca se ennegrece y se marchita.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 12, p. 13",
+   "citas": [
+    {
+     "p": 13,
+     "t": "a diferencia de la monilia, esta muestra unos límites bien definidos."
+    }
+   ],
+   "palabras": [
+    "mazorca negra",
+    "negra",
+    "fitoptora",
+    "phytophthora",
+    "mancha",
+    "limites",
+    "pudricion",
+    "chocolate",
+    "negro",
+    "enfermedad"
+   ]
+  },
+  {
+   "id": "enf-07",
+   "tema": "enfermedades",
+   "titulo": "Cuándo se da más la mazorca negra",
+   "texto": "El inicio de la infección depende de la humedad relativa alta y las bajas temperaturas. Las épocas de lluvia favorecen la liberación y el reparto de las esporas, y la salpicadura de la lluvia afecta las mazorcas más cercanas al suelo. En los cojines florales, los cánceres pueden venir de contaminación con herramientas de cosecha.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 13",
+   "citas": [
+    {
+     "p": 13,
+     "t": "El inicio del proceso de infección depende de las condiciones ambientales, la humedad relativa alta y las bajas temperaturas."
+    }
+   ],
+   "palabras": [
+    "mazorca negra",
+    "lluvia",
+    "humedad",
+    "salpicadura",
+    "suelo",
+    "herramientas",
+    "cosecha",
+    "epoca",
+    "invierno",
+    "enfermedad"
+   ]
+  },
+  {
+   "id": "enf-08",
+   "tema": "enfermedades",
+   "titulo": "Medidas de cuidado contra la mazorca negra",
+   "texto": "Entre las medidas de manejo: haga plateo al árbol (retire la hojarasca y las malezas), controle la sombra y, en vivero, maneje la humedad y la sombra. Para decidir si hace falta algún tratamiento, consulte a un técnico, a la asociación de productores o a FEDECACAO.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 14",
+   "citas": [
+    {
+     "p": 14,
+     "t": "Hacer plateo al árbol, retirándole la hojarasca y las malezas."
+    },
+    {
+     "p": 14,
+     "t": "Controlar la sombra."
+    }
+   ],
+   "palabras": [
+    "mazorca negra",
+    "plateo",
+    "hojarasca",
+    "malezas",
+    "sombra",
+    "vivero",
+    "manejo",
+    "enfermedad",
+    "tratamiento"
+   ]
+  }
+ ],
+ "faq": [
+  {
+   "id": "faq-01",
+   "preguntas": [
+    "¿Cada cuánto se voltea el cacao?",
+    "¿Cuándo volteo?"
+   ],
+   "palabras": [
+    "voltear",
+    "volteo",
+    "cuando volteo",
+    "cada cuanto"
+   ],
+   "fragmentos": [
+    "vol-01",
+    "vol-02"
+   ]
+  },
+  {
+   "id": "faq-02",
+   "preguntas": [
+    "¿Cuántos días dura la fermentación?"
+   ],
+   "palabras": [
+    "dias",
+    "dura",
+    "duracion",
+    "cuantos dias",
+    "fermentacion"
+   ],
+   "fragmentos": [
+    "ferm-05"
+   ]
+  },
+  {
+   "id": "faq-03",
+   "preguntas": [
+    "¿A qué temperatura debe llegar la masa?",
+    "¿Está normal mi temperatura?"
+   ],
+   "palabras": [
+    "temperatura",
+    "grados",
+    "masa",
+    "normal",
+    "termometro"
+   ],
+   "fragmentos": [
+    "ferm-04"
+   ]
+  },
+  {
+   "id": "faq-04",
+   "preguntas": [
+    "¿Cómo sé que ya terminó la fermentación?"
+   ],
+   "palabras": [
+    "terminar",
+    "termino",
+    "final",
+    "listo",
+    "fermentacion"
+   ],
+   "fragmentos": [
+    "ferm-05",
+    "corte-01"
+   ]
+  },
+  {
+   "id": "faq-05",
+   "preguntas": [
+    "¿Cómo hago la prueba de corte?"
+   ],
+   "palabras": [
+    "prueba de corte",
+    "corte",
+    "cortar"
+   ],
+   "fragmentos": [
+    "corte-01",
+    "corte-02"
+   ]
+  },
+  {
+   "id": "faq-06",
+   "preguntas": [
+    "¿Cómo seco mi cacao?"
+   ],
+   "palabras": [
+    "secar",
+    "secado",
+    "como seco"
+   ],
+   "fragmentos": [
+    "sec-01",
+    "sec-03"
+   ]
+  },
+  {
+   "id": "faq-07",
+   "preguntas": [
+    "¿Cuándo está seco el cacao?"
+   ],
+   "palabras": [
+    "seco",
+    "humedad",
+    "cuando esta seco"
+   ],
+   "fragmentos": [
+    "sec-03"
+   ]
+  },
+  {
+   "id": "faq-08",
+   "preguntas": [
+    "¿Dónde no debo secar el cacao?"
+   ],
+   "palabras": [
+    "donde secar",
+    "pavimento",
+    "cemento",
+    "patio"
+   ],
+   "fragmentos": [
+    "sec-04"
+   ]
+  },
+  {
+   "id": "faq-09",
+   "preguntas": [
+    "¿Cómo guardo el cacao seco?"
+   ],
+   "palabras": [
+    "guardar",
+    "almacenar",
+    "bodega",
+    "sacos"
+   ],
+   "fragmentos": [
+    "alm-01"
+   ]
+  },
+  {
+   "id": "faq-10",
+   "preguntas": [
+    "¿Qué es la monilia?"
+   ],
+   "palabras": [
+    "monilia",
+    "moniliasis"
+   ],
+   "fragmentos": [
+    "enf-01",
+    "enf-02"
+   ]
+  },
+  {
+   "id": "faq-11",
+   "preguntas": [
+    "¿Qué es la mazorca negra?"
+   ],
+   "palabras": [
+    "mazorca negra",
+    "fitoptora",
+    "phytophthora"
+   ],
+   "fragmentos": [
+    "enf-06"
+   ]
+  },
+  {
+   "id": "faq-12",
+   "preguntas": [
+    "¿Qué hago con las mazorcas enfermas?"
+   ],
+   "palabras": [
+    "mazorcas enfermas",
+    "enferma",
+    "retirar",
+    "recoger"
+   ],
+   "fragmentos": [
+    "cos-02",
+    "enf-03"
+   ]
+  },
+  {
+   "id": "faq-13",
+   "preguntas": [
+    "¿Por qué mi cacao huele a humo o a vinagre?"
+   ],
+   "palabras": [
+    "huele",
+    "olor",
+    "humo",
+    "vinagre",
+    "feo"
+   ],
+   "fragmentos": [
+    "def-01",
+    "def-03"
+   ]
+  },
+  {
+   "id": "faq-14",
+   "preguntas": [
+    "¿Qué es la escoba de bruja?"
+   ],
+   "palabras": [
+    "escoba de bruja",
+    "escoba"
+   ],
+   "fragmentos": [
+    "enf-04",
+    "enf-05"
+   ]
+  }
+ ],
+ "glosario": [
+  {
+   "termino": "Masa de cacao",
+   "definicion": "Los granos de cacao con su pulpa dulce y blanca (mucílago) cuando están fermentando en el cajón. Es la temperatura de esta masa la que se mide con el termómetro.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 3",
+   "citas": [
+    {
+     "p": 3,
+     "t": "es la pulpa dulce, blanca y mucilaginosa que rodea a los granos"
+    }
+   ],
+   "palabras": [
+    "masa",
+    "pulpa",
+    "mucilago",
+    "baba"
+   ]
+  },
+  {
+   "termino": "Fermentación",
+   "definicion": "Proceso en el que microorganismos transforman la pulpa del grano y sueltan gas y calor. Produce las sustancias que dan el sabor y el aroma del chocolate.",
+   "fuente_id": "lasalle2022",
+   "fuente": "U. de La Salle / FEDECACAO (Medina et al., 2022), p. 3",
+   "citas": [
+    {
+     "p": 3,
+     "t": "La fermentación es un proceso bioquímico, de catabolismo u oxidación de compuestos, que es realizado por los microorganismos liberando gas y calor."
+    }
+   ],
+   "palabras": [
+    "fermentacion",
+    "fermentar",
+    "microorganismos"
+   ]
+  },
+  {
+   "termino": "Volteo",
+   "definicion": "Mover el cacao de un cajón a otro para que el grano de abajo quede arriba y el de las esquinas, en el centro.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 4",
+   "citas": [
+    {
+     "p": 4,
+     "t": "que consiste en mover el cacao de un cajón a otro."
+    }
+   ],
+   "palabras": [
+    "volteo",
+    "voltear",
+    "voltee"
+   ]
+  },
+  {
+   "termino": "Prueba de corte",
+   "definicion": "Cortar a lo largo una muestra de 100 granos y mirar su interior para saber qué tan fermentado está el cacao.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 4",
+   "citas": [
+    {
+     "p": 4,
+     "t": "Cada grano se corta longitudinalmente y se observan las características internas para determinar el grado de fermentación."
+    }
+   ],
+   "palabras": [
+    "prueba de corte",
+    "corte",
+    "cortar"
+   ]
+  },
+  {
+   "termino": "Arrebatar el cacao",
+   "definicion": "Secarlo demasiado rápido: se seca solo el exterior del grano y quedan encerrados el agua y el ácido acético (vinagre).",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 5",
+   "citas": [
+    {
+     "p": 5,
+     "t": "esto es, se seca el exterior del grano encerrando agua y ácido acético (vinagre)"
+    }
+   ],
+   "palabras": [
+    "arrebatar",
+    "arrebata",
+    "arrebatado"
+   ]
+  },
+  {
+   "termino": "Cojín floral",
+   "definicion": "El lugar del tronco y las ramas donde nacen las flores y las próximas mazorcas. Se daña si se arranca la mazorca de un tirón o con machete.",
+   "fuente_id": "fhia2017",
+   "fuente": "FHIA, InfoCacao No. 14 (2017), p. 1",
+   "citas": [
+    {
+     "p": 1,
+     "t": "daña el cojinete floral cuya función es formar las próximas mazorcas."
+    }
+   ],
+   "palabras": [
+    "cojin floral",
+    "cojinete",
+    "cojin"
+   ]
+  },
+  {
+   "termino": "Monilia",
+   "definicion": "Enfermedad de la mazorca causada por el hongo Moniliophthora roreri. También se le llama pudrición acuosa, pasmo, neva, hielo, ceniza o pringue.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 8",
+   "citas": [
+    {
+     "p": 8,
+     "t": "pudrición acuosa, pasmo, neva, hielo, ceniza y pringue"
+    }
+   ],
+   "palabras": [
+    "monilia",
+    "moniliasis"
+   ]
+  },
+  {
+   "termino": "Escoba de bruja",
+   "definicion": "Enfermedad causada por el hongo Moniliophthora perniciosa, que hace brotar ramas con forma de escoba y deforma los frutos.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 10",
+   "citas": [
+    {
+     "p": 10,
+     "t": "Es causada por el hongo Crinipellis perniciosao Moniliophthora perniciosa"
+    }
+   ],
+   "palabras": [
+    "escoba de bruja",
+    "escoba"
+   ]
+  },
+  {
+   "termino": "Mazorca negra",
+   "definicion": "Enfermedad causada por el hongo Phytophthora (también llamada fitóptora). Mancha el fruto de chocolate o negro con límites bien definidos.",
+   "fuente_id": "ica2012",
+   "fuente": "ICA con Fedecacao (2012), p. 12",
+   "citas": [
+    {
+     "p": 12,
+     "t": "Es una enfermedad causada por el hongo Phytophthora sp."
+    }
+   ],
+   "palabras": [
+    "mazorca negra",
+    "fitoptora",
+    "phytophthora"
+   ]
+  },
+  {
+   "termino": "Temperatura ambiente",
+   "definicion": "La temperatura del aire del lugar. No es la temperatura de la masa de cacao ni la del grano. En esta app se anota aparte y es opcional.",
+   "fuente_id": null,
+   "fuente": "Definición de esta app",
+   "citas": [],
+   "palabras": [
+    "ambiente",
+    "aire",
+    "temperatura ambiente"
+   ]
+  }
+ ]
+}
