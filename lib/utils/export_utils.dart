@@ -1,48 +1,50 @@
 import 'dart:io';
-import 'package:alarmacacao5_0/models/lote.dart';
-import 'package:alarmacacao5_0/services/lote_service.dart';
-import 'package:alarmacacao5_0/services/volteada_service.dart';
-import 'package:alarmacacao5_0/models/volteada.dart';
+import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:alarmacacao5_0/models/volteada.dart';
+import 'package:alarmacacao5_0/services/lote_service.dart';
+
+/// Exporta todos los lotes y sus registros confirmados a un CSV y lo comparte.
 Future<void> exportarTodosLosLotesCSV(BuildContext context) async {
-  final loteService = LoteService();
-  final volteadaService = VolteadaService();
-  final lotes = await loteService.loadLotes();
-  final volteadas = await volteadaService.cargarVolteadas();
+  final messenger = ScaffoldMessenger.of(context);
+  final lotes = await LoteService().loadLotes();
 
   if (lotes.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No hay lotes para exportar.')),
-    );
+    messenger.showSnackBar(const SnackBar(content: Text('No hay lotes para exportar.')));
     return;
   }
 
-  final buffer = StringBuffer();
-  buffer.writeln('ID Lote,Título,Estado,Creado,Volteada Fecha,Temperatura, Humedad, Observación');
+  final fmt = DateFormat('yyyy-MM-dd HH:mm');
+  final rows = <List<dynamic>>[
+    ['ID Lote', 'Título', 'Estado', 'Creado', 'Fecha registro', 'Etapa',
+     'Temperatura (°C)', 'Humedad (%)', 'Observación', 'Latitud', 'Longitud'],
+  ];
 
   for (final lote in lotes) {
-    final volteadasDelLote = volteadas.where((v) => v.loteId == lote.id).toList();
-
-    if (volteadasDelLote.isEmpty) {
-      buffer.writeln('${lote.id},${lote.title},${lote.status},${lote.createdAt.toIso8601String()},,,,');
-    } else {
-      for (final v in volteadasDelLote) {
-        buffer.writeln(
-          '${lote.id},${lote.title},${lote.status},${lote.createdAt.toIso8601String()},${v.fecha.toIso8601String()},${v.temperatura},${v.humedad},${v.observacion}',
-        );
-      }
+    final registros = lote.volteadas.where((v) => v.confirmada).toList();
+    if (registros.isEmpty) {
+      rows.add([lote.id, lote.title, lote.status, fmt.format(lote.createdAt), '', '', '', '', '', '', '']);
+    }
+    for (final v in registros) {
+      rows.add([
+        lote.id, lote.title, lote.status, fmt.format(lote.createdAt),
+        fmt.format(v.fecha), Etapa.nombre(v.etapa), v.temperatura, v.humedad,
+        v.observacion, v.latitud ?? '', v.longitud ?? '',
+      ]);
     }
   }
 
   final directory = await getApplicationDocumentsDirectory();
   final file = File('${directory.path}/lotes_exportados.csv');
-  await file.writeAsString(buffer.toString());
+  // ListToCsvConverter escapa comas y comillas de las observaciones.
+  await file.writeAsString(const ListToCsvConverter().convert(rows));
 
-  await Share.shareXFiles(
-    [XFile(file.path)],
+  await SharePlus.instance.share(ShareParams(
+    files: [XFile(file.path)],
     text: 'Archivo CSV exportado de lotes de cacao',
-  );
+  ));
 }

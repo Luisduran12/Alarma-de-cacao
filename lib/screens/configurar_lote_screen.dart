@@ -72,9 +72,7 @@ class _ConfigurarLoteScreenState extends State<ConfigurarLoteScreen> {
       status: 'pendiente',
     );
 
-    List<Lote> lotesExistentes = await _loteService.loadLotes();
-    lotesExistentes.add(nuevoLote);
-    await _loteService.saveLotes(lotesExistentes);
+    await _loteService.addLote(nuevoLote);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
