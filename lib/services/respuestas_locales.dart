@@ -181,16 +181,16 @@ class RespuestasLocales {
     final estado = ReferenciasCurva.estadoTemperatura(u.temperatura, horas, u.etapa);
     final intro = switch (estado) {
       EstadoRango.sinReferencia =>
-        'Su última temperatura fue $valor (a las ${_horas(horas)}). En las primeras ${ref.desdeHora!.round()} horas '
+        'Su última temperatura fue $valor, a las ${_horas(horas)}. En las primeras ${ref.desdeHora!.round()} horas '
             'de la fermentación no tengo un rango verificado para decir si es normal.',
-      EstadoRango.dentro => 'Su última temperatura fue $valor (a las ${_horas(horas)}) y está dentro de la referencia '
+      EstadoRango.dentro => 'Su última temperatura fue $valor, a las ${_horas(horas)}, y está dentro de la referencia '
           '(${_rango(ref)}).',
-      EstadoRango.bajo => 'Su última temperatura fue $valor (a las ${_horas(horas)}) y está por debajo de la referencia '
+      EstadoRango.bajo => 'Su última temperatura fue $valor, a las ${_horas(horas)}, y está por debajo de la referencia '
           '(${_rango(ref)}).',
       EstadoRango.alto => ref.maximoEsLimite
-          ? 'Su última temperatura fue $valor (a las ${_horas(horas)}) y está por encima del máximo de la referencia '
+          ? 'Su última temperatura fue $valor, a las ${_horas(horas)}, y está por encima del máximo de la referencia '
               '(${_rango(ref)}).'
-          : 'Su última temperatura fue $valor (a las ${_horas(horas)}). Es más que ${_num(ref.maximo!)} $unidad, pero la '
+          : 'Su última temperatura fue $valor, a las ${_horas(horas)}. Es más que ${_num(ref.maximo!)} $unidad, pero la '
               'fuente dice "${_num(ref.maximo!)} $unidad o más", no un tope.',
     };
     final r = _deFragmentos([_frag(u.etapa == Etapa.secado ? 'sec-06' : 'ferm-04')],
