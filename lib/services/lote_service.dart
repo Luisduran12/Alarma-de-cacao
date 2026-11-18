@@ -125,14 +125,17 @@ class LoteService {
     await db.update('lotes', {'estado': estado}, where: 'id = ?', whereArgs: [loteId]);
   }
 
-  /// Elimina un lote, sus registros y cancela sus alarmas pendientes.
+  /// Elimina un lote, sus registros y recordatorios, y cancela sus alarmas pendientes.
   Future<void> deleteLote(String loteId) async {
     final db = await _db();
     final pendientes = await db.query('registros',
         columns: ['notif_id'],
         where: 'lote_id = ? AND confirmada = 0 AND notif_id != 0',
         whereArgs: [loteId]);
-    for (final r in pendientes) {
+    // También los recordatorios de medir la temperatura (su tabla se borra en cascada).
+    final recordatorios = await db.query('recordatorios',
+        columns: ['notif_id'], where: 'lote_id = ?', whereArgs: [loteId]);
+    for (final r in [...pendientes, ...recordatorios]) {
       try {
         await _cancelarNotificacion(r['notif_id'] as int);
       } catch (e) {

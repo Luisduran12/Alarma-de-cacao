@@ -67,13 +67,13 @@ void main() {
     await db.close();
   }
 
-  test('de v2 a v3 conserva todos los datos y agrega columnas vacías', () async {
+  test('de v2 a la versión actual conserva todos los datos y agrega columnas vacías', () async {
     await crearBaseV2();
 
     final db = await CacaoDatabase.abrir(databaseFactoryFfi, ruta);
     addTearDown(db.close);
 
-    expect(await db.getVersion(), 3);
+    expect(await db.getVersion(), CacaoDatabase.version);
     final lotes = await db.query('lotes');
     expect(lotes, hasLength(1));
     expect(lotes.single['titulo'], 'Lote viejo');

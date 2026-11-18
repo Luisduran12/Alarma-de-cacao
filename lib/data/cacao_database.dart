@@ -7,6 +7,7 @@ import 'migracion_prefs.dart';
 ///
 /// Tablas:
 ///  - lotes:     un lote de cacao en beneficio.
+///  - recordatorios: avisos de medir la temperatura (no son registros).
 ///  - registros: volteadas programadas y datos medidos (fecha, temperatura,
 ///               humedad, observación, latitud, longitud, etapa y, opcionales,
 ///               pH, Brix y temperatura ambiente).
@@ -15,7 +16,8 @@ class CacaoDatabase {
   /// v1: tablas lotes y registros.
   /// v2: resultado del grano en lotes (calidad_resultado, observacion_resultado).
   /// v3: pH, Brix y temperatura ambiente opcionales en registros.
-  static const int version = 3;
+  /// v4: tabla recordatorios (avisos de medir la temperatura cada 12 h).
+  static const int version = 4;
 
   static Future<Database>? _instancia;
 
@@ -42,6 +44,7 @@ class CacaoDatabase {
         onUpgrade: (db, anterior, _) async {
           if (anterior < 2) await _agregarResultado(db);
           if (anterior < 3) await _agregarMedidasOpcionales(db);
+          if (anterior < 4) await _crearRecordatorios(db);
         },
       ),
     );
@@ -82,6 +85,23 @@ class CacaoDatabase {
       )
     ''');
     await db.execute('CREATE INDEX idx_registros_lote ON registros(lote_id)');
+    await _crearRecordatorios(db);
+  }
+
+  /// Avisos programados que NO son registros del lote (por ejemplo, "medir la
+  /// temperatura"): así no cuentan como volteadas pendientes ni impiden que el
+  /// lote se marque como completado.
+  static Future<void> _crearRecordatorios(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE recordatorios (
+        id                TEXT PRIMARY KEY,
+        lote_id           TEXT NOT NULL REFERENCES lotes(id) ON DELETE CASCADE,
+        notif_id          INTEGER NOT NULL,
+        fecha_programada  TEXT NOT NULL,
+        tipo              TEXT NOT NULL DEFAULT 'medir_temperatura'
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_recordatorios_lote ON recordatorios(lote_id)');
   }
 
   /// Solo agrega columnas nulas: los registros existentes no se tocan.
