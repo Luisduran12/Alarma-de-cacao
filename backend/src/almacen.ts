@@ -56,6 +56,11 @@ export class MemoriaAlmacen implements Almacen {
   async guardar(clave: string, valor: string, ttlSeg: number): Promise<void> {
     this.datos.set(clave, { valor, vence: this.ahora() + ttlSeg * 1000 });
   }
+
+  /** Todo lo que hay guardado (ayuda para PRUEBAS: comprobar que nunca se guarda contenido del usuario). */
+  volcar(): Array<[string, string]> {
+    return [...this.datos.entries()].filter(([c]) => this.vivo(c)).map(([c, e]) => [c, e.valor]);
+  }
 }
 
 type Comando = (string | number)[];
