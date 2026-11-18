@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +12,7 @@ import '../models/lote.dart';
 import '../data/referencias_curva.dart';
 import '../models/volteada.dart';
 import '../services/curva_ideal.dart';
+import '../services/exportar_curva.dart';
 import '../services/lote_service.dart';
 import '../services/plantillas.dart';
 import '../services/resumen_curva.dart';
@@ -33,6 +36,7 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
   late Lote _lote;
   CurvaIdeal _ideal = CurvaIdeal.vacia;
   Lote? _comparado; // segundo lote superpuesto en la curva
+  final _curvaKey = GlobalKey(); // para exportar la curva como imagen
 
   @override
   void initState() {
@@ -56,6 +60,54 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
     if (mounted) setState(() => _ideal = nueva);
   }
 
+  void _aviso(String texto) {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
+  }
+
+  Future<File> _escribirTemporal(String nombre, List<int> bytes) async {
+    final dir = await getTemporaryDirectory();
+    final archivo = File('${dir.path}/$nombre');
+    await archivo.writeAsBytes(bytes);
+    return archivo;
+  }
+
+  Future<void> _exportarPng() async {
+    if (_confirmadas.length < 2) return _aviso('La curva aparece con al menos 2 registros.');
+    try {
+      final png = await ExportarCurva.capturarPng(_curvaKey);
+      final archivo = await _escribirTemporal(ExportarCurva.nombreArchivo('curva_${_lote.title}', 'png'), png);
+      await SharePlus.instance.share(ShareParams(files: [XFile(archivo.path)], text: 'Curva del lote "${_lote.title}"'));
+    } on StateError {
+      _aviso('Desplácese hasta ver la curva completa y vuelva a intentar.');
+    } catch (e) {
+      _aviso('No se pudo guardar la curva: $e');
+    }
+  }
+
+  Future<void> _exportarPdf() async {
+    if (_confirmadas.isEmpty) return _aviso('No hay registros para el PDF.');
+    try {
+      Uint8List? png;
+      try {
+        png = await ExportarCurva.capturarPng(_curvaKey);
+      } on StateError {
+        png = null; // sin la curva a la vista: el PDF sale con los datos y la tabla
+      }
+      final pdf = await ExportarCurva.pdfDelLote(
+        lote: _lote,
+        registros: _confirmadas,
+        inicio: _inicioCurva,
+        png: png,
+        ideal: _ideal,
+      );
+      final archivo = await _escribirTemporal(ExportarCurva.nombreArchivo('lote_${_lote.title}', 'pdf'), pdf);
+      await SharePlus.instance.share(ShareParams(files: [XFile(archivo.path)], text: 'Lote "${_lote.title}"'));
+      if (png == null) _aviso('El PDF salió sin la imagen de la curva (no estaba a la vista).');
+    } catch (e) {
+      _aviso('No se pudo crear el PDF: $e');
+    }
+  }
+
   Future<void> _elegirComparacion() async {
     final lotes = (await _loteService.loadLotes()).where((l) => l.id != _lote.id).toList();
     if (!mounted) return;
@@ -76,6 +128,7 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
           inicio: _inicioCurva,
           nombre: _lote.title,
           ideal: _ideal,
+          repaintKey: _curvaKey,
           comparacion: comp == null
               ? null
               : SerieComparada(
@@ -102,6 +155,16 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
               onPressed: _editarIdeal,
               icon: const Icon(Icons.timeline),
               label: Text(_ideal.estaVacia ? 'Definir curva ideal' : 'Editar curva ideal'),
+            ),
+            OutlinedButton.icon(
+              onPressed: _exportarPng,
+              icon: const Icon(Icons.image_outlined),
+              label: const Text('Curva (imagen PNG)'),
+            ),
+            OutlinedButton.icon(
+              onPressed: _exportarPdf,
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              label: const Text('Lote (PDF de 1 página)'),
             ),
           ],
         ),
