@@ -8,7 +8,6 @@ import 'package:alarmacacao5_0/services/notification_service.dart';
 
 
 // Pantallas
-import 'package:alarmacacao5_0/screens/home_screen.dart';
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
 import 'package:alarmacacao5_0/screens/clima_cacao_page.dart';
 import 'package:alarmacacao5_0/screens/configurar_lote_screen.dart';
