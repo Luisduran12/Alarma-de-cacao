@@ -41,11 +41,7 @@
 
 	<!-- 📍 Permisos de ubicación -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Se necesita acceso a la ubicación para consultar el clima en tu zona.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>La app usa tu ubicación para proporcionar información climática precisa.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Se necesita tu ubicación tanto en primer plano como en segundo plano para notificaciones y clima.</string>
+	<string>Se usa la ubicación para consultar el clima en tu zona y marcar el punto de secado del lote.</string>
 
 	<!-- 💤 Permitir tareas en segundo plano -->
 	<key>UIBackgroundModes</key>
