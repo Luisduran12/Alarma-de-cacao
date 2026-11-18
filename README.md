@@ -63,38 +63,33 @@ git clone https://github.com/Luisduran12/Alarma-de-cacao.git
 cd Alarma-de-cacao
 flutter pub get
 
-# 1. Configurar las claves (ver la sección siguiente)
-cp .env.example .env      # y edita .env
-
-# 2. Ejecutar en un teléfono conectado
-flutter run --dart-define-from-file=.env
+# Ejecutar en un teléfono conectado (no hace falta ninguna clave)
+flutter run
 ```
 
-## Configurar las claves
+## Claves y servicios externos
 
-La app **no** lleva claves dentro del código. Se pasan al compilar desde el
-archivo `.env`, que está en `.gitignore` y nunca se sube a GitHub:
+La app **no lleva ninguna clave** dentro del código ni del APK.
 
-```env
-# .env
-OPENWEATHER_API_KEY=tu_clave_de_openweathermap
-```
+- **Clima:** [Open-Meteo](https://open-meteo.com/), sin clave. Los datos son
+  CC BY 4.0, por eso la pantalla de clima muestra "Weather data by
+  Open-Meteo.com" con su enlace. El uso gratuito es **solo no comercial**
+  (condiciones en <https://open-meteo.com/en/terms>): si la app llegara a cobrarse
+  o llevar publicidad, hay que contratar su plan comercial. La ubicación se envía
+  redondeada a 2 decimales (≈ 1 km).
+- **Nombres de lugar y municipios:** lista del DANE (DIVIPOLA, CC BY-SA 4.0) que
+  va dentro de la app. Ver `docs/creditos.md`.
+- **IA (fases siguientes):** la clave de Anthropic vivirá solo en un backend,
+  nunca en la app.
 
-- Obtén la clave en <https://home.openweathermap.org/api_keys>.
-- Compila siempre con `--dart-define-from-file=.env`. Sin la clave, la app
-  funciona normalmente y solo la pantalla de clima muestra un aviso.
-- Ojo: lo que se pasa con `--dart-define` queda dentro del APK. Para una clave
-  gratuita de clima es aceptable; **una clave de pago (por ejemplo, de IA) debe
-  ir en un backend, nunca en la app**.
-
-> La clave que estuvo en el primer commit (`cb55257`) quedó expuesta en el
-> historial público y debe darse por comprometida: hay que anularla en
-> OpenWeatherMap.
+> La clave de OpenWeatherMap que estuvo en el primer commit (`cb55257`) quedó
+> expuesta en el historial público y debe darse por comprometida: hay que
+> anularla en OpenWeatherMap. La app ya no la usa.
 
 ## Compilar el APK de release
 
 ```bash
-flutter build apk --release --dart-define-from-file=.env
+flutter build apk --release
 # Resultado: build/app/outputs/flutter-apk/app-release.apk
 ```
 
