@@ -4,5 +4,10 @@
     "api/chat.ts": { "maxDuration": 30 },
     "api/analizar-foto.ts": { "maxDuration": 60 },
     "api/lugar.ts": { "maxDuration": 15 }
-  }
+  },
+  "rewrites": [
+    { "source": "/chat", "destination": "/api/chat" },
+    { "source": "/analizar-foto", "destination": "/api/analizar-foto" },
+    { "source": "/lugar", "destination": "/api/lugar" }
+  ]
 }

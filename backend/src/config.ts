@@ -27,6 +27,8 @@ export interface Config {
   pepper: string | undefined;
   /** Contacto que se incluye en el User-Agent de Nominatim (política de OSM). */
   contactoNominatim: string | undefined;
+  /** Interruptor para apagar /lugar (la política de Nominatim pide poder cambiar de servicio si lo piden). */
+  lugarDesactivado: boolean;
 }
 
 /**
@@ -75,6 +77,7 @@ export function cargarConfig(env: Record<string, string | undefined> = process.e
     bloqueoTotal: env.BLOQUEO_TOTAL === "1",
     pepper: texto(env.ID_PEPPER),
     contactoNominatim: texto(env.NOMINATIM_CONTACTO),
+    lugarDesactivado: env.LUGAR_DESACTIVADO === "1",
   };
 }
 
