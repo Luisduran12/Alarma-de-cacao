@@ -16,6 +16,11 @@ class PlantillaCiclo {
   /// Fuente de la pauta, para mostrarla al usuario.
   final String fuente;
 
+  /// true si la hora final del ciclo es el final de la FERMENTACIÓN (entonces el
+  /// aviso final invita a hacer la prueba de corte). En las demás plantillas el
+  /// ciclo son solo alarmas y no se sabe si es el final de la fermentación.
+  final bool finEsFermentacion;
+
   const PlantillaCiclo({
     required this.id,
     required this.nombre,
@@ -23,6 +28,7 @@ class PlantillaCiclo {
     required this.horasVolteo,
     required this.duracionHoras,
     this.fuente = '',
+    this.finEsFermentacion = false,
   });
 
   bool get tieneAlarmaFinal => horasVolteo.isEmpty || duracionHoras > horasVolteo.last;
@@ -46,6 +52,7 @@ class Plantillas {
     horasVolteo: [48, 72, 96, 120],
     duracionHoras: 144,
     fuente: 'Duración: FEDECACAO. Pauta 48-24-24-24: tesis UIS/UNAD. Verificar con el protocolo de su asociación.',
+    finEsFermentacion: true,
   );
 
   /// Alarmas predeterminadas que ya traía la app (24, 34 y 48 h).

@@ -5,6 +5,7 @@ import 'package:alarmacacao5_0/models/lote.dart';
 import 'package:alarmacacao5_0/screens/clima_screen.dart';
 import 'package:alarmacacao5_0/screens/comparacion_lotes_screen.dart';
 import 'package:alarmacacao5_0/screens/detalle_lote_screen.dart';
+import 'package:alarmacacao5_0/screens/guia_prueba_corte_screen.dart';
 import 'package:alarmacacao5_0/screens/reglas_alerta_screen.dart';
 import 'package:alarmacacao5_0/screens/ver_registro_screen.dart';
 import 'package:alarmacacao5_0/services/alarm_scheduler.dart';
@@ -297,6 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onLotesChanged: _cargarLotes,
             ))),
         boton(Icons.compare_arrows, 'Comparar lotes', () => _abrir(const ComparacionLotesScreen())),
+        boton(Icons.content_cut, 'Guía de la prueba de corte', () => _abrir(const GuiaPruebaCorteScreen())),
         boton(Icons.notifications_active, 'Alertas por reglas', () => _abrir(const ReglasAlertaScreen())),
         boton(Icons.cloud, 'Ver clima actual', () => _abrir(const ClimaScreen())),
         boton(Icons.thermostat, 'Imagen de calor', _mostrarImagenCalor),

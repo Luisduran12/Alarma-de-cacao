@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/lote.dart';
 import '../data/referencias_curva.dart';
 import '../models/volteada.dart';
+import '../services/alarm_scheduler.dart';
 import '../services/curva_ideal.dart';
 import '../services/exportar_curva.dart';
 import '../services/lote_service.dart';
@@ -20,6 +21,7 @@ import '../widgets/curva_lote_chart.dart';
 import '../widgets/editor_curva_ideal_dialog.dart';
 import '../widgets/selector_lote_dialog.dart';
 import 'confirmar_volteada_screen.dart';
+import 'guia_prueba_corte_screen.dart';
 
 class DetalleLoteScreen extends StatefulWidget {
   final Lote lote;
@@ -37,6 +39,8 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
   CurvaIdeal _ideal = CurvaIdeal.vacia;
   Lote? _comparado; // segundo lote superpuesto en la curva
   final _curvaKey = GlobalKey(); // para exportar la curva como imagen
+  final _scheduler = AlarmScheduler();
+  bool? _recordatoriosActivos; // null = todavía no se sabe
 
   @override
   void initState() {
@@ -46,6 +50,32 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
     CurvaIdealStorage.cargar().then((c) {
       if (mounted) setState(() => _ideal = c);
     });
+    _refrescarRecordatorios();
+  }
+
+  Future<void> _refrescarRecordatorios() async {
+    final activos = await _scheduler.recordatoriosActivos(_lote.id);
+    if (mounted) setState(() => _recordatoriosActivos = activos);
+  }
+
+  /// Hay algo por venir que recordar: el lote tiene fin de ciclo en el futuro.
+  bool get _puedeRecordar => _lote.finCiclo != null && _lote.finCiclo!.isAfter(DateTime.now());
+
+  Future<void> _cambiarRecordatorios(bool activar) async {
+    try {
+      if (activar) {
+        final n = await _scheduler.programarRecordatorios(_lote);
+        _aviso(n == 0
+            ? 'No quedan horas por recordar en este lote.'
+            : 'Listo: le avisaremos $n ${n == 1 ? 'vez' : 'veces'} para medir la temperatura.');
+      } else {
+        await _scheduler.desactivarRecordatorios(_lote.id);
+        _aviso('Recordatorios apagados. Las alarmas de volteo siguen igual.');
+      }
+    } catch (e) {
+      _aviso('No se pudo cambiar los recordatorios: $e');
+    }
+    await _refrescarRecordatorios();
   }
 
   DateTime get _inicioCurva => _lote.inicioCiclo ?? _confirmadas.firstOrNull?.fecha ?? _lote.createdAt;
@@ -437,6 +467,23 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
                     ? 'Sin observación. Evalúa el grano al terminar para poder comparar lotes.'
                     : _lote.observacionResultado!),
                 trailing: TextButton(onPressed: _editarResultado, child: const Text('Evaluar')),
+              ),
+            ),
+            if (_puedeRecordar || _recordatoriosActivos == true)
+              Card(
+                child: SwitchListTile(
+                  title: const Text('Recordar medir la temperatura cada 12 h'),
+                  subtitle: const Text('Además de las alarmas de volteo. Suena aunque la app esté cerrada.'),
+                  value: _recordatoriosActivos ?? false,
+                  onChanged: _recordatoriosActivos == null ? null : _cambiarRecordatorios,
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GuiaPruebaCorteScreen())),
+                icon: const Icon(Icons.content_cut),
+                label: const Text('Guía de la prueba de corte'),
               ),
             ),
             _seccion('📈 Curva de temperatura y humedad'),

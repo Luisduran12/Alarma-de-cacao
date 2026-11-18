@@ -11,6 +11,7 @@ import 'package:alarmacacao5_0/services/notification_service.dart';
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
 import 'package:alarmacacao5_0/screens/clima_cacao_page.dart';
 import 'package:alarmacacao5_0/screens/configurar_lote_screen.dart';
+import 'package:alarmacacao5_0/screens/guia_prueba_corte_screen.dart';
 import 'package:alarmacacao5_0/screens/permisos_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -31,7 +32,10 @@ void main() async {
 
   if (argsLanzamiento != null) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      navigatorKey.currentState?.pushNamed('/confirmar', arguments: argsLanzamiento);
+      navigatorKey.currentState?.pushNamed(
+        argsLanzamiento['ruta'] ?? NotificationService.rutaConfirmar,
+        arguments: argsLanzamiento,
+      );
     });
   }
 }
@@ -70,6 +74,17 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ClimaCacaoPage());
           case '/configurar':
             return MaterialPageRoute(builder: (_) => const ConfigurarLoteScreen());
+          case '/guia-corte':
+            final args = settings.arguments;
+            if (args is Map && args['loteId'] is String) {
+              return MaterialPageRoute(
+                builder: (_) => GuiaPruebaCorteScreen(
+                  loteId: args['loteId'] as String,
+                  volteadaId: (args['volteadaId'] as String?) ?? '',
+                ),
+              );
+            }
+            return MaterialPageRoute(builder: (_) => const GuiaPruebaCorteScreen());
           case '/confirmar':
             final args = settings.arguments;
             if (args is Map && args['loteId'] is String) {

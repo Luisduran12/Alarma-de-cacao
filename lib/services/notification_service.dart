@@ -57,13 +57,32 @@ class NotificationService {
   /// Payload de una volteada: "v2|<loteId>|<volteadaId>".
   static String payloadVolteada(String loteId, String volteadaId) => 'v2|$loteId|$volteadaId';
 
-  /// Convierte un payload en argumentos para la ruta '/confirmar'.
-  /// Acepta el formato nuevo (v2) y el antiguo "loteId|titulo|mensaje|fecha".
+  /// Payload de un recordatorio de medir la temperatura: "m|<loteId>".
+  static String payloadMedir(String loteId) => 'm|$loteId';
+
+  /// Payload del aviso de fin de fermentación: "c|<loteId>|<volteadaId>". Abre
+  /// la guía de la prueba de corte.
+  static String payloadCorte(String loteId, String volteadaId) => 'c|$loteId|$volteadaId';
+
+  static const rutaConfirmar = '/confirmar';
+  static const rutaGuiaCorte = '/guia-corte';
+
+  /// Convierte un payload en argumentos para abrir una pantalla.
+  /// Acepta "v2|lote|volteada" (volteada), "m|lote" (medir temperatura: registro
+  /// nuevo), "c|lote|volteada" (guía de la prueba de corte) y el formato antiguo
+  /// "loteId|titulo|mensaje|fecha". Los tipos nuevos traen la clave `ruta`; sin
+  /// ella la pantalla es '/confirmar'.
   static Map<String, String>? argumentosDesdePayload(String? payload) {
     if (payload == null || payload.trim().isEmpty) return null;
     final parts = payload.split('|');
     if (parts.length == 3 && parts[0] == 'v2') {
       return {'loteId': parts[1], 'volteadaId': parts[2], 'mensaje': ''};
+    }
+    if (parts.length == 2 && parts[0] == 'm' && parts[1].isNotEmpty) {
+      return {'loteId': parts[1], 'volteadaId': '', 'mensaje': '', 'ruta': rutaConfirmar};
+    }
+    if (parts.length == 3 && parts[0] == 'c' && parts[1].isNotEmpty) {
+      return {'loteId': parts[1], 'volteadaId': parts[2], 'mensaje': '', 'ruta': rutaGuiaCorte};
     }
     if (parts.length >= 4) {
       return {'loteId': parts[0], 'volteadaId': '', 'mensaje': parts[2]};
@@ -80,7 +99,7 @@ class NotificationService {
       debugPrint('⚠️ Payload no reconocido: ${response.payload}');
       return;
     }
-    navigatorKey.currentState?.pushNamed('/confirmar', arguments: args);
+    navigatorKey.currentState?.pushNamed(args['ruta'] ?? rutaConfirmar, arguments: args);
   }
 
   /// Si la app se abrió desde una notificación (estando cerrada), devuelve
@@ -133,18 +152,31 @@ class NotificationService {
     required String cuerpo,
     required DateTime fechaProgramada,
     String? payload,
+    bool esRecordatorio = false,
   }) async {
     final fechaZoned = tz.TZDateTime.from(fechaProgramada, tz.local);
 
-    const androidDetails = AndroidNotificationDetails(
-      'volteadas_channel',
-      'Alarmas Programadas',
-      channelDescription: 'Canal para notificaciones programadas',
-      importance: Importance.max,
-      priority: Priority.high,
-      playSound: true,
-      sound: RawResourceAndroidNotificationSound('sonido_base'),
-    );
+    // Los recordatorios de medir la temperatura van en su propio canal: así el
+    // productor puede silenciarlos desde los ajustes de Android sin perder las alarmas de volteo.
+    final androidDetails = esRecordatorio
+        ? const AndroidNotificationDetails(
+            'recordatorios_channel',
+            'Recordatorios de medición',
+            channelDescription: 'Avisos de medir la temperatura de la masa cada 12 horas',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('sonido_base'),
+          )
+        : const AndroidNotificationDetails(
+            'volteadas_channel',
+            'Alarmas Programadas',
+            channelDescription: 'Canal para notificaciones programadas',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('sonido_base'),
+          );
 
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -171,7 +203,7 @@ class NotificationService {
       titulo,
       cuerpo,
       fechaZoned,
-      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+      NotificationDetails(android: androidDetails, iOS: iosDetails),
       androidScheduleMode: puedeExacta
           ? AndroidScheduleMode.exactAllowWhileIdle
           : AndroidScheduleMode.inexactAllowWhileIdle,
