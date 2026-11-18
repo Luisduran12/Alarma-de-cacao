@@ -135,7 +135,7 @@ describe("prompt de la foto", () => {
 });
 
 describe("POST /analizar-foto", () => {
-  it("devuelve el resultado validado con el aviso obligatorio; usa Sonnet 5.5 con el prompt del modo y un tope de 2000 tokens", async () => {
+  it("devuelve el resultado validado con el aviso obligatorio; usa Sonnet 5.5 con el prompt del modo y un tope de 4000 tokens", async () => {
     const ia = new IAFalsa();
     const r = await crearFoto({ ...deps(), ia })(peticion());
     expect(r.status).toBe(200);
@@ -146,7 +146,7 @@ describe("POST /analizar-foto", () => {
     expect(j.aviso).toBe("Estimación orientativa. La clasificación oficial es la prueba de corte de la NTC 1252. Ante duda, consulte al técnico.");
     expect(ia.llamadas[0]!.modelo).toBe("claude-sonnet-5-5");
     expect(ia.llamadas[0]!.sistema).toBe(sistemaFoto("corte"));
-    expect(ia.llamadas[0]!.maxTokens).toBe(2000);
+    expect(ia.llamadas[0]!.maxTokens).toBe(4000);
   });
 
   it("a la IA le llega la imagen LIMPIA: sin EXIF, sin GPS", async () => {

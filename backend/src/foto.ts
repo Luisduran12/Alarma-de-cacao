@@ -26,7 +26,12 @@ const MAX_IMAGEN_BYTES = 1_800_000;
 /** La app reduce a ~1024 px; hasta 1600 px se acepta, más no (cuesta más y no ayuda). */
 const MAX_LADO = 1600;
 const MIN_LADO = 200;
-const MAX_TOKENS_RESPUESTA = 2000;
+/**
+ * Tope de tokens de SALIDA, que en Sonnet 5.5 incluyen el razonamiento además del JSON. Con un
+ * tope bajo, un razonamiento largo dejaría el JSON cortado (respuesta inválida, ya cobrada).
+ * El peor caso por foto es este tope × el precio de salida (ver docs/costos-ia.md).
+ */
+const MAX_TOKENS_RESPUESTA = 4000;
 
 const Cuerpo = z
   .object({
