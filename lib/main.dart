@@ -25,6 +25,7 @@ void main() async {
 
   await _solicitarPermisos();
   await NotificationService().init(); // Inicializa notificaciones
+  await NotificationService().solicitarPermisos(); // Notificaciones + alarmas exactas
 
   runApp(const MyApp());
 }

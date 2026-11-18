@@ -49,6 +49,16 @@ class NotificationService {
     debugPrint('✅ Servicio de notificaciones inicializado correctamente');
   }
 
+  /// Pide permiso de notificaciones (Android 13+) y de alarmas exactas (Android 12+).
+  Future<void> solicitarPermisos() async {
+    final android = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await android?.requestNotificationsPermission();
+    if (!(await android?.canScheduleExactNotifications() ?? true)) {
+      await android?.requestExactAlarmsPermission();
+    }
+  }
+
   /// Manejo de respuesta cuando el usuario toca una notificación
   static Future<void> _handleNotificationResponse(NotificationResponse response) async {
     final payload = response.payload;
@@ -159,7 +169,7 @@ class NotificationService {
     final fechaZoned = tz.TZDateTime.from(fechaProgramada, tz.local);
 
     const androidDetails = AndroidNotificationDetails(
-      'scheduled_channel_id',
+      'volteadas_channel',
       'Alarmas Programadas',
       channelDescription: 'Canal para notificaciones programadas',
       importance: Importance.max,
@@ -175,14 +185,28 @@ class NotificationService {
       sound: 'sonido_base.mp3',
     );
 
+    if (fechaZoned.isBefore(tz.TZDateTime.now(tz.local))) {
+      debugPrint('⚠️ Fecha en el pasado, no se programa: $fechaZoned');
+      return;
+    }
+
+    // Si Android no concede alarmas exactas (Android 12+), se usa una inexacta
+    // en vez de fallar.
+    final android = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final bool puedeExacta = await android?.canScheduleExactNotifications() ?? true;
+
+    // Sin matchDateTimeComponents: con DateTimeComponents.dateAndTime la alarma
+    // se repetía cada año. Esta es una alarma de una sola vez.
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id,
       titulo,
       cuerpo,
       fechaZoned,
       const NotificationDetails(android: androidDetails, iOS: iosDetails),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.dateAndTime,
+      androidScheduleMode: puedeExacta
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle,
       payload: payload,
     );
 

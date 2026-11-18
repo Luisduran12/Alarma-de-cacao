@@ -7,7 +7,6 @@ import 'package:alarmacacao5_0/services/notification_service.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:alarmacacao5_0/widgets/registro_formulario_dialog.dart';
-import 'real_time_timer.dart';
 
 class AlarmScheduler {
   final LoteService _loteService = LoteService();
@@ -78,25 +77,26 @@ class AlarmScheduler {
     try {
       final now = tz.TZDateTime.now(tz.local);
       final List<Volteada> nuevasVolteadas = [];
-      final RealTimeTimer timer = RealTimeTimer();
 
       for (int i = 0; i < horas.length; i++) {
         final int h = horas[i];
-        final int durationInSeconds = h * 3600;
-
         final tz.TZDateTime scheduledDate = now.add(Duration(hours: h));
         final String mensaje = 'Volteada ${i + 1} para el ${DateFormat('dd/MM/yyyy HH:mm').format(scheduledDate)}';
+        final String volteadaId = _uuid.v4();
 
-        // ✅ Llamada corregida usando parámetros nombrados
-        await timer.startTimer(
-          durationInSeconds,
-          title: lote.title,
-          mensaje: mensaje,
+        // Alarma real del sistema: suena aunque la app esté cerrada.
+        // (Antes se usaba un Timer.periodic en memoria que moría al cerrar la app.)
+        await _notificationService.programarNotificacion(
+          id: volteadaId.hashCode,
+          titulo: 'Volteada ${i + 1} - ${lote.title}',
+          cuerpo: 'Es hora de voltear el cacao. Toca para registrar temperatura y humedad.',
+          fechaProgramada: scheduledDate,
+          payload: '${lote.id}|${lote.title}|$mensaje|${scheduledDate.toIso8601String()}',
         );
 
         nuevasVolteadas.add(
           Volteada(
-            id: _uuid.v4(),
+            id: volteadaId,
             loteId: lote.id,
             mensaje: mensaje,
             temperatura: 0.0,
