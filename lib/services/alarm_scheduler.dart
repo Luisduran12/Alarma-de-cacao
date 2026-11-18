@@ -115,7 +115,8 @@ class AlarmScheduler {
 
       // Crear lote actualizado con volteadas programadas
       final Lote actualizado = lote.copyWith(volteadas: nuevasVolteadas);
-      await _loteService.saveLotes([actualizado]);
+      // Antes: saveLotes([actualizado]) reemplazaba TODA la lista y borraba los demás lotes.
+      await _loteService.upsertLote(actualizado);
 
       onLoteCompleted(actualizado);
 

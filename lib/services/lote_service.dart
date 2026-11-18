@@ -72,6 +72,19 @@ class LoteService {
     }
   }
 
+  /// Inserta el lote si no existe o lo reemplaza si ya existe,
+  /// SIN tocar los demás lotes guardados.
+  Future<void> upsertLote(Lote lote) async {
+    final currentLotes = await loadLotes();
+    final index = currentLotes.indexWhere((l) => l.id == lote.id);
+    if (index == -1) {
+      currentLotes.add(lote);
+    } else {
+      currentLotes[index] = lote;
+    }
+    await saveLotes(currentLotes);
+  }
+
   /// Elimina un lote por su ID.
   Future<void> deleteLote(String loteId) async {
     try {

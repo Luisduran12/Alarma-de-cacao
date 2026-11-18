@@ -202,12 +202,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       _startCountdown(volteadaDurations);
 
-      setState(() {
-        _lotesGuardados.add(newLote);
-        _isLoading = true;
-        _progressValue = 0.0;
-      });
-      await _guardarLotesDesdeServicio();
+      // El lote ya fue agregado/guardado en onLoteCompleted; no se vuelve a agregar.
+      await _cargarLotesDesdeServicio();
     }
   }
 
