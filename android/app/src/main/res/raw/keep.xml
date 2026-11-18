@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Evita que R8 elimine el sonido en el APK de release: el plugin lo busca por nombre. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/sonido_base" />
