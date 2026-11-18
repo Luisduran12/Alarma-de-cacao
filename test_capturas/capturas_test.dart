@@ -11,6 +11,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -20,10 +23,13 @@ import 'package:alarmacacao5_0/models/volteada.dart';
 import 'package:alarmacacao5_0/screens/comparacion_lotes_screen.dart';
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
 import 'package:alarmacacao5_0/screens/detalle_lote_screen.dart';
+import 'package:alarmacacao5_0/screens/clima_screen.dart';
 import 'package:alarmacacao5_0/screens/guia_prueba_corte_screen.dart';
 import 'package:alarmacacao5_0/screens/home_screen.dart';
 import 'package:alarmacacao5_0/screens/reglas_alerta_screen.dart';
+import 'package:alarmacacao5_0/services/clima_service.dart';
 import 'package:alarmacacao5_0/services/exportar_curva.dart';
+import 'package:alarmacacao5_0/services/location_service.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
 import 'package:alarmacacao5_0/widgets/curva_lote_chart.dart';
 
@@ -75,6 +81,28 @@ Volteada _reg(String lote, int horas, double t, double h, String obs,
     longitud: lon,
   );
 }
+
+/// GPS simulado en Chinácota (Norte de Santander), para las capturas.
+class _GpsCaptura implements PlataformaUbicacion {
+  @override
+  Future<bool> servicioActivado() async => true;
+  @override
+  Future<LocationPermission> permiso() async => LocationPermission.whileInUse;
+  @override
+  Future<LocationPermission> pedirPermiso() async => LocationPermission.whileInUse;
+  @override
+  Future<Position> posicionActual(Duration limite) async => Position(
+      latitude: 7.5851, longitude: -72.5964, timestamp: DateTime.now(), accuracy: 9, altitude: 0,
+      altitudeAccuracy: 0, heading: 0, headingAccuracy: 0, speed: 0, speedAccuracy: 0);
+  @override
+  Future<Position?> ultimaConocida() async => null;
+}
+
+/// Respuesta REAL de Open-Meteo (consulta del 2026-11-18, 17:30 hora de Colombia, sin clave).
+const _respuestaOpenMeteo =
+    '{"utc_offset_seconds":-18000,"current":{"time":"2026-11-18T17:30","interval":900,'
+    '"temperature_2m":21.7,"relative_humidity_2m":81,"weather_code":1,"is_day":0}}';
+final _momentoClima = DateTime.utc(2026, 11, 18, 23, 0); // 30 min después de esa medición
 
 late Lote _loteDetalle;
 late Lote _loteCurso;
@@ -295,4 +323,56 @@ void main() {
       },
     );
   });
+
+  // ---- Fase 3: ubicación, clima y lugar (clima REAL de una consulta; lugares reales del DANE) ----
+
+  ClimaService servicioClima({required bool internet, DateTime? ahora}) => ClimaService(
+        cliente: MockClient((_) async =>
+            internet ? http.Response(_respuestaOpenMeteo, 200) : throw http.ClientException('sin red')),
+        ahora: () => ahora ?? _momentoClima,
+      );
+
+  Widget pantallaClima(ClimaService c, {DateTime? ahora}) => ClimaScreen(
+        clima: c,
+        ubicacion: LocationService(plataforma: _GpsCaptura()),
+        ahora: () => ahora ?? _momentoClima,
+      );
+
+  testWidgets('fase3 clima en linea', (t) async {
+    SharedPreferences.setMockInitialValues({'migrado_a_sqlite_v1': true});
+    await _capturar(t, pantallaClima(servicioClima(internet: true)), 'fase3/f3_clima_en_linea.png', alto: 1500);
+  });
+
+  testWidgets('fase3 clima sin senal con ultimo dato guardado', (t) async {
+    SharedPreferences.setMockInitialValues({'migrado_a_sqlite_v1': true});
+    final seisHorasDespues = _momentoClima.add(const Duration(hours: 6));
+    await t.runAsync(() => servicioClima(internet: true).consultar(7.59, -72.60)); // deja el dato guardado
+    await _capturar(t, pantallaClima(servicioClima(internet: false, ahora: seisHorasDespues), ahora: seisHorasDespues),
+        'fase3/f3_clima_sin_senal.png', alto: 1500);
+  });
+
+  testWidgets('fase3 clima escrito a mano sin senal', (t) async {
+    SharedPreferences.setMockInitialValues({'migrado_a_sqlite_v1': true});
+    await _capturar(t, pantallaClima(servicioClima(internet: false)), 'fase3/f3_clima_manual.png', alto: 1500,
+        interaccion: (t) async {
+      await t.enterText(find.widgetWithText(TextFormField, 'Temperatura del aire (°C)'), '26,5');
+      await t.enterText(find.widgetWithText(TextFormField, 'Humedad del aire (%)'), '78');
+      await t.tap(find.text('Guardar lo que anoté'));
+      for (var i = 0; i < 8; i++) {
+        await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 60)));
+        await t.pump(const Duration(milliseconds: 60));
+      }
+    });
+  });
+
+  testWidgets('fase3 punto de secado por GPS con el lugar',
+      (t) => _capturar(
+          t,
+          ConfirmarVolteadaScreen(
+              loteId: 'detalle', ubicacion: LocationService(plataforma: _GpsCaptura()), notificarAlerta: (_, __) async {}),
+          'fase3/f3_punto_secado_gps.png',
+          alto: 1500));
+
+  testWidgets('fase3 detalle con el lugar del punto de secado',
+      (t) => _capturar(t, DetalleLoteScreen(lote: _loteDetalle), 'fase3/f3_detalle_lugar.png', alto: 2800));
 }

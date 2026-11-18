@@ -19,6 +19,8 @@ import '../services/plantillas.dart';
 import '../services/resumen_curva.dart';
 import '../widgets/curva_lote_chart.dart';
 import '../widgets/editor_curva_ideal_dialog.dart';
+import '../widgets/lugar_texto.dart';
+import '../services/lugar_service.dart';
 import '../widgets/selector_lote_dialog.dart';
 import 'confirmar_volteada_screen.dart';
 import 'guia_prueba_corte_screen.dart';
@@ -30,8 +32,9 @@ class DetalleLoteScreen extends StatefulWidget {
   /// notificaciones reales.
   final LoteService? loteService;
   final AlarmScheduler? scheduler;
+  final LugarService? lugarService;
 
-  const DetalleLoteScreen({super.key, required this.lote, this.loteService, this.scheduler});
+  const DetalleLoteScreen({super.key, required this.lote, this.loteService, this.scheduler, this.lugarService});
 
   @override
   State<DetalleLoteScreen> createState() => _DetalleLoteScreenState();
@@ -507,7 +510,13 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
                   leading: const Icon(Icons.place, color: Colors.red),
                   title: Text('Lat ${punto.latitud!.toStringAsFixed(6)}, '
                       'Lon ${punto.longitud!.toStringAsFixed(6)}'),
-                  subtitle: Text('Registrado el ${_fmt.format(punto.fecha)}'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Registrado el ${_fmt.format(punto.fecha)}'),
+                      LugarTexto(latitud: punto.latitud!, longitud: punto.longitud!, servicio: widget.lugarService),
+                    ],
+                  ),
                   trailing: TextButton(
                     onPressed: () => _abrirMapa(punto.latitud!, punto.longitud!),
                     child: const Text('Ver en mapa'),

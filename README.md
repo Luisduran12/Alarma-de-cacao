@@ -78,7 +78,10 @@ La app **no lleva ninguna clave** dentro del código ni del APK.
   o llevar publicidad, hay que contratar su plan comercial. La ubicación se envía
   redondeada a 2 decimales (≈ 1 km).
 - **Nombres de lugar y municipios:** lista del DANE (DIVIPOLA, CC BY-SA 4.0) que
-  va dentro de la app. Ver `docs/creditos.md`.
+  va dentro de la app y funciona sin internet (llega hasta centro poblado, no
+  vereda). Con un servidor configurado, la app le pide además el nombre exacto
+  (`--dart-define=BACKEND_URL=https://...`; la dirección no es un secreto) y lo
+  guarda en el teléfono. Ver `docs/creditos.md`.
 - **IA (fases siguientes):** la clave de Anthropic vivirá solo en un backend,
   nunca en la app.
 

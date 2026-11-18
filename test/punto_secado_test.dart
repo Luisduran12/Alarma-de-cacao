@@ -10,6 +10,8 @@ import 'package:alarmacacao5_0/models/volteada.dart';
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
+import 'package:alarmacacao5_0/services/lugar_service.dart';
+import 'package:alarmacacao5_0/services/lugares_offline.dart';
 
 /// Fuera del reloj falso hay que dar tiempo real a SQLite; cada `await` necesita su vuelta.
 Future<void> _esperar(WidgetTester t) async {
@@ -85,6 +87,12 @@ void main() {
               builder: (_) => ConfirmarVolteadaScreen(
                 loteId: 'L1', volteadaId: 'V1', loteService: servicio,
                 ubicacion: LocationService(plataforma: gps),
+                lugarService: LugarService(
+                  database: () async => db,
+                  urlServidor: '',
+                  lista: () async => LugaresOffline.desdeJson(
+                      '{"departamentos":["Norte de Santander"],"lugares":[["Chinácota","Chinácota",0,7.603112,-72.601162,"M"]]}'),
+                ),
                 notificarAlerta: (_, __) async {},
               ),
             )),
@@ -115,6 +123,8 @@ void main() {
     expect(find.text('Secado'), findsWidgets);
     expect(find.text('Lat 7.603100, Lon -72.601200'), findsOneWidget);
     expect(find.text('Precisión: unos 8 m'), findsOneWidget);
+    expect(find.textContaining('Cerca de Chinácota (Norte de Santander)'), findsOneWidget,
+        reason: 'el nombre del lugar sale de la lista offline, sin internet');
     expect(find.textContaining('última ubicación'), findsNothing);
 
     await llenarYGuardar(t);

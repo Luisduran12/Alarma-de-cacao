@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../models/clima.dart';
 import '../services/clima_service.dart';
 import '../services/location_service.dart';
+import '../services/lugar_service.dart';
+import '../widgets/lugar_texto.dart';
 
 /// Clima del AMBIENTE en el lugar del productor (Open-Meteo), con el último dato
 /// guardado cuando no hay señal y la opción de escribir temperatura y humedad a mano.
@@ -15,10 +16,11 @@ class ClimaScreen extends StatefulWidget {
   /// Se pueden cambiar en pruebas.
   final ClimaService? clima;
   final LocationService? ubicacion;
+  final LugarService? lugarService;
   final Future<bool> Function(Uri)? abrirEnlace;
   final DateTime Function()? ahora;
 
-  const ClimaScreen({super.key, this.clima, this.ubicacion, this.abrirEnlace, this.ahora});
+  const ClimaScreen({super.key, this.clima, this.ubicacion, this.lugarService, this.abrirEnlace, this.ahora});
 
   @override
   State<ClimaScreen> createState() => _ClimaScreenState();
@@ -154,6 +156,11 @@ class _ClimaScreenState extends State<ClimaScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   _avisoAmbiente(tema),
+                  if (_lugar != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+                      child: LugarTexto(latitud: _lugar!.latitud, longitud: _lugar!.longitud, servicio: widget.lugarService),
+                    ),
                   const SizedBox(height: 12),
                   if (_resultado != null) _tarjetaClima(tema, _resultado!),
                   if (_problema != null) _tarjetaProblema(tema, _problema!),

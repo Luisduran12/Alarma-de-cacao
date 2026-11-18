@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:alarmacacao5_0/screens/clima_screen.dart';
 import 'package:alarmacacao5_0/services/clima_service.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
+import 'package:alarmacacao5_0/services/lugar_service.dart';
 
 const _respuesta = '''
 {"utc_offset_seconds":-18000,"current":{"time":"2026-11-18T17:30","interval":900,
@@ -33,6 +34,13 @@ class _Gps implements PlataformaUbicacion {
         altitudeAccuracy: 0, heading: 0, headingAccuracy: 0, speed: 0, speedAccuracy: 0);
   @override
   Future<Position?> ultimaConocida() async => null;
+}
+
+/// Devuelve siempre el mismo lugar, sin base de datos.
+class _LugarFalso extends LugarService {
+  @override
+  Future<NombreLugar?> nombreDe(double lat, double lng) async =>
+      const NombreLugar('Cerca de Chinácota (Norte de Santander), a menos de 1 km', OrigenLugar.listaOffline, 'DANE');
 }
 
 void main() {
@@ -59,6 +67,7 @@ void main() {
       home: ClimaScreen(
         clima: clima ?? servicio(),
         ubicacion: LocationService(plataforma: gps),
+        lugarService: _LugarFalso(),
         abrirEnlace: (u) async {
           enlaces.add(u);
           return true;
@@ -88,6 +97,12 @@ void main() {
     expect(pedidos, hasLength(1));
     expect(pedidos.single.queryParameters['latitude'], '7.60', reason: 'ubicación redondeada, no la exacta');
     expect(pedidos.single.query.toLowerCase(), isNot(contains('key')));
+  });
+
+  testWidgets('muestra el lugar donde se tomó el clima (referencia aproximada)', (t) async {
+    await abrir(t);
+    expect(find.text('Cerca de Chinácota (Norte de Santander), a menos de 1 km'), findsOneWidget);
+    expect(find.textContaining('no la vereda'), findsOneWidget);
   });
 
   testWidgets('deja clarísimo que es el clima del ambiente y no la temperatura del grano', (t) async {

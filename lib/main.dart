@@ -6,6 +6,7 @@ import 'package:timezone/data/latest.dart' as tz_data;
 
 // Servicios
 import 'package:alarmacacao5_0/services/alarm_scheduler.dart';
+import 'package:alarmacacao5_0/services/lugar_service.dart';
 import 'package:alarmacacao5_0/services/notification_service.dart';
 
 
@@ -28,6 +29,10 @@ void main() async {
   // Red de seguridad: si el sistema perdió alguna alarma (por ejemplo, un ahorrador
   // de batería bloqueó el reinicio de alarmas), se reprograma. No retrasa el arranque.
   unawaited(_reprogramarAlarmasPerdidas());
+
+  // Si hay señal y un servidor configurado, se resuelven los nombres de lugar
+  // que faltan (sin servidor no hace nada: la lista offline basta).
+  unawaited(_resolverLugaresPendientes());
 
   // Si la app se abrió tocando una notificación con la app cerrada,
   // se abre el formulario de esa volteada cuando el Navigator esté listo.
@@ -52,6 +57,15 @@ Future<void> _reprogramarAlarmasPerdidas() async {
     if (n > 0) debugPrint('🔁 Se reprogramaron $n alarmas que el sistema había perdido');
   } catch (e) {
     debugPrint('No se pudieron revisar las alarmas pendientes: $e');
+  }
+}
+
+Future<void> _resolverLugaresPendientes() async {
+  try {
+    final n = await LugarService().resolverPendientes();
+    if (n > 0) debugPrint('📍 Se resolvieron $n nombres de lugar');
+  } catch (e) {
+    debugPrint('No se pudieron resolver los nombres de lugar: $e');
   }
 }
 

@@ -6,6 +6,8 @@ import 'package:alarmacacao5_0/models/lote.dart';
 import 'package:alarmacacao5_0/models/volteada.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
+import 'package:alarmacacao5_0/services/lugar_service.dart';
+import 'package:alarmacacao5_0/widgets/lugar_texto.dart';
 import 'package:alarmacacao5_0/services/notification_ids.dart';
 import 'package:alarmacacao5_0/services/notification_service.dart';
 import 'package:alarmacacao5_0/services/reglas_alerta.dart';
@@ -28,6 +30,7 @@ class ConfirmarVolteadaScreen extends StatefulWidget {
   /// guardadas en el teléfono y una notificación local (todo sin internet).
   final LoteService? loteService;
   final LocationService? ubicacion;
+  final LugarService? lugarService;
   final Future<List<ReglaAlerta>> Function()? cargarReglas;
   final Future<void> Function(String titulo, String cuerpo)? notificarAlerta;
 
@@ -38,6 +41,7 @@ class ConfirmarVolteadaScreen extends StatefulWidget {
     this.mensaje = '',
     this.loteService,
     this.ubicacion,
+    this.lugarService,
     this.cargarReglas,
     this.notificarAlerta,
   });
@@ -410,6 +414,7 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
               ])
             else if (tiene) ...[
               Text('Lat ${_latitud!.toStringAsFixed(6)}, Lon ${_longitud!.toStringAsFixed(6)}'),
+              LugarTexto(latitud: _latitud!, longitud: _longitud!, servicio: widget.lugarService),
               ..._detalleUbicacion(),
             ] else
               Text(_errorUbicacion ?? 'Sin ubicación. Se puede guardar sin ella.',
