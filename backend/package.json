@@ -1,0 +1,23 @@
+{
+  "name": "cacao-light-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Servidor de Cacao Light: guarda la clave de IA y limita el uso. No guarda conversaciones ni fotos.",
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.10.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.1.1"
+  }
+}
