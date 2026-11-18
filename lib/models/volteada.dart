@@ -10,6 +10,7 @@ class Volteada {
   final DateTime fecha;          // Fecha y hora de creación o confirmación
   final DateTime fechaProgramada; // 📅 Fecha y hora de la alarma
   final bool confirmada;          // ✅ Si la alarma ya fue atendida
+  final int notifId;              // 🔔 ID estable de la notificación programada (0 = ninguna)
 
   Volteada({
     required this.id,
@@ -21,6 +22,7 @@ class Volteada {
     required this.fecha,
     required this.fechaProgramada,
     required this.confirmada,
+    this.notifId = 0,
   });
 
   // Serializa el objeto a JSON
@@ -34,6 +36,7 @@ class Volteada {
         'fecha': fecha.toIso8601String(),
         'fechaProgramada': fechaProgramada.toIso8601String(),
         'confirmada': confirmada,
+        'notifId': notifId,
       };
 
   // Crea una instancia desde JSON
@@ -48,6 +51,7 @@ class Volteada {
       fecha: DateTime.tryParse(json['fecha'] ?? '') ?? DateTime.now(),
       fechaProgramada: DateTime.tryParse(json['fechaProgramada'] ?? '') ?? DateTime.now(),
       confirmada: json['confirmada'] ?? false,
+      notifId: (json['notifId'] as num?)?.toInt() ?? 0,
     );
   }
 }

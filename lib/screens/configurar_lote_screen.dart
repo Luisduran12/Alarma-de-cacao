@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:alarmacacao5_0/services/notification_ids.dart';
 import 'package:uuid/uuid.dart';
 import 'package:alarmacacao5_0/services/notification_service.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
@@ -35,9 +36,10 @@ class _ConfigurarLoteScreenState extends State<ConfigurarLoteScreen> {
           final DateTime fechaProgramada = now.add(Duration(hours: horas));
           final String mensaje = 'Volteada #${i + 1} programada para $horas horas';
           final String idVolteada = uuid.v4();
+          final int notifId = await NotificationIds.siguiente();
 
           await _notiService.programarNotificacion(
-            id: idVolteada.hashCode,
+            id: notifId,
             titulo: 'Alarma Volteada',
             cuerpo: mensaje,
             fechaProgramada: fechaProgramada,
@@ -55,6 +57,7 @@ class _ConfigurarLoteScreenState extends State<ConfigurarLoteScreen> {
               fecha: now,
               fechaProgramada: fechaProgramada,
               confirmada: false,
+              notifId: notifId,
             ),
           );
         }
@@ -86,7 +89,7 @@ class _ConfigurarLoteScreenState extends State<ConfigurarLoteScreen> {
     final DateTime fechaProgramada = now.add(const Duration(seconds: 10));
 
     await _notiService.programarNotificacion(
-      id: now.millisecondsSinceEpoch % 100000,
+      id: await NotificationIds.siguiente(),
       titulo: 'Alarma Rápida',
       cuerpo: 'Esta es una alarma predeterminada de prueba',
       fechaProgramada: fechaProgramada,

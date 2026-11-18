@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:alarmacacao5_0/models/lote.dart';
+import 'package:alarmacacao5_0/services/notification_service.dart';
 
 class LoteService {
   static const String _lotesKey = 'lotes_guardados';
@@ -89,6 +90,12 @@ class LoteService {
   Future<void> deleteLote(String loteId) async {
     try {
       List<Lote> currentLotes = await loadLotes();
+      // Cancela las alarmas pendientes del lote antes de borrarlo.
+      for (final lote in currentLotes.where((l) => l.id == loteId)) {
+        for (final v in lote.volteadas.where((v) => v.notifId != 0 && !v.confirmada)) {
+          await NotificationService().cancelarNotificacion(v.notifId);
+        }
+      }
       currentLotes.removeWhere((l) => l.id == loteId);
       await saveLotes(currentLotes);
     } catch (e) {

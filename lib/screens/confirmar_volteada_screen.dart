@@ -75,6 +75,7 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
       fecha: ahora,
       fechaProgramada: base?.fechaProgramada ?? ahora,
       confirmada: true,
+      notifId: base?.notifId ?? 0,
     );
     if (index == -1) {
       volteadas.add(registro);

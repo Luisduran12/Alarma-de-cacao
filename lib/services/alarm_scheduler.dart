@@ -4,6 +4,7 @@ import 'package:alarmacacao5_0/models/lote.dart';
 import 'package:alarmacacao5_0/models/volteada.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
 import 'package:alarmacacao5_0/services/notification_service.dart';
+import 'package:alarmacacao5_0/services/notification_ids.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:alarmacacao5_0/widgets/registro_formulario_dialog.dart';
@@ -83,11 +84,12 @@ class AlarmScheduler {
         final tz.TZDateTime scheduledDate = now.add(Duration(hours: h));
         final String mensaje = 'Volteada ${i + 1} para el ${DateFormat('dd/MM/yyyy HH:mm').format(scheduledDate)}';
         final String volteadaId = _uuid.v4();
+        final int notifId = await NotificationIds.siguiente();
 
         // Alarma real del sistema: suena aunque la app esté cerrada.
         // (Antes se usaba un Timer.periodic en memoria que moría al cerrar la app.)
         await _notificationService.programarNotificacion(
-          id: volteadaId.hashCode,
+          id: notifId,
           titulo: 'Volteada ${i + 1} - ${lote.title}',
           cuerpo: 'Es hora de voltear el cacao. Toca para registrar temperatura y humedad.',
           fechaProgramada: scheduledDate,
@@ -105,6 +107,7 @@ class AlarmScheduler {
             fecha: DateTime.now(),
             fechaProgramada: scheduledDate,
             confirmada: false,
+            notifId: notifId,
           ),
         );
 

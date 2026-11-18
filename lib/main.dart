@@ -5,10 +5,7 @@ import 'package:timezone/data/latest.dart' as tz_data;
 
 // Servicios
 import 'package:alarmacacao5_0/services/notification_service.dart';
-import 'package:alarmacacao5_0/services/volteada_service.dart';
 
-// Modelos
-import 'package:alarmacacao5_0/models/volteada.dart';
 
 // Pantallas
 import 'package:alarmacacao5_0/screens/home_screen.dart';
@@ -106,29 +103,5 @@ class MyApp extends StatelessWidget {
         }
       },
     );
-  }
-}
-
-@pragma('vm:entry-point')
-void callbackDispatcher() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  tz_data.initializeTimeZones();
-
-  final volteadaService = VolteadaService();
-  final notificationService = NotificationService();
-
-  final List<Volteada> volteadas = await volteadaService.cargarVolteadas();
-
-  for (final volteada in volteadas) {
-    if (!volteada.confirmada) {
-      await notificationService.programarNotificacion(
-        id: volteada.id.hashCode,
-        titulo: 'Recordatorio de volteada',
-        cuerpo: 'Voltea el cacao del lote ${volteada.loteId}',
-        fechaProgramada: volteada.fechaProgramada,
-        payload:
-            '${volteada.loteId}|Volteada pendiente|${volteada.mensaje}|${volteada.fechaProgramada.toIso8601String()}',
-      );
-    }
   }
 }
