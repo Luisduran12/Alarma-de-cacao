@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:alarmacacao5_0/models/lote.dart';
@@ -26,6 +27,7 @@ class ConfirmarVolteadaScreen extends StatefulWidget {
   /// Se pueden cambiar en pruebas; por defecto usan la base de datos, las reglas
   /// guardadas en el teléfono y una notificación local (todo sin internet).
   final LoteService? loteService;
+  final LocationService? ubicacion;
   final Future<List<ReglaAlerta>> Function()? cargarReglas;
   final Future<void> Function(String titulo, String cuerpo)? notificarAlerta;
 
@@ -35,6 +37,7 @@ class ConfirmarVolteadaScreen extends StatefulWidget {
     this.volteadaId = '',
     this.mensaje = '',
     this.loteService,
+    this.ubicacion,
     this.cargarReglas,
     this.notificarAlerta,
   });
@@ -63,6 +66,8 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
   double? _longitud;
   bool _buscandoUbicacion = false;
   String? _errorUbicacion;
+  bool _errorEsDePermiso = false; // el arreglo es abrir los ajustes del teléfono
+  UbicacionObtenida? _ultimaUbicacion; // para mostrar precisión y antigüedad
 
   @override
   void initState() {
@@ -119,17 +124,25 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
     setState(() {
       _buscandoUbicacion = true;
       _errorUbicacion = null;
+      _errorEsDePermiso = false;
     });
     try {
-      final pos = await LocationService().obtenerUbicacionActual(context);
+      final pos = await (widget.ubicacion ?? LocationService()).obtener();
       if (!mounted) return;
       setState(() {
-        _latitud = pos.latitude;
-        _longitud = pos.longitude;
+        _latitud = pos.latitud;
+        _longitud = pos.longitud;
+        _ultimaUbicacion = pos;
+      });
+    } on UbicacionException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorUbicacion = e.mensaje;
+        _errorEsDePermiso = e.abrirAjustes;
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _errorUbicacion = e.toString().replaceFirst('Exception: ', ''));
+      setState(() => _errorUbicacion = 'No se pudo obtener la ubicación.');
     } finally {
       if (mounted) setState(() => _buscandoUbicacion = false);
     }
@@ -364,6 +377,21 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
     );
   }
 
+  /// Precisión, y aviso si la posición no es nueva (puede ser de otro lugar).
+  List<Widget> _detalleUbicacion() {
+    final u = _ultimaUbicacion;
+    if (u == null) return const []; // ubicación que ya venía guardada en el registro
+    return [
+      if (u.precisionMetros != null) Text('Precisión: unos ${u.precisionMetros!.round()} m'),
+      if (u.esUltimaConocida)
+        Text(
+          'Es la última ubicación que tenía el teléfono${u.hace(DateTime.now()) == null ? '' : ' (${u.hace(DateTime.now())})'}: '
+          'puede no ser de este lugar. Salga a un sitio abierto y toque "Actualizar ubicación".',
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+    ];
+  }
+
   Widget _buildUbicacion() {
     final tiene = _latitud != null && _longitud != null;
     return Card(
@@ -380,11 +408,18 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
                 SizedBox(width: 8),
                 Text('Obteniendo ubicación GPS…'),
               ])
-            else if (tiene)
-              Text('Lat ${_latitud!.toStringAsFixed(6)}, Lon ${_longitud!.toStringAsFixed(6)}')
-            else
+            else if (tiene) ...[
+              Text('Lat ${_latitud!.toStringAsFixed(6)}, Lon ${_longitud!.toStringAsFixed(6)}'),
+              ..._detalleUbicacion(),
+            ] else
               Text(_errorUbicacion ?? 'Sin ubicación. Se puede guardar sin ella.',
                   style: TextStyle(color: _errorUbicacion != null ? Colors.red : null)),
+            if (_errorEsDePermiso && !tiene)
+              TextButton.icon(
+                onPressed: openAppSettings,
+                icon: const Icon(Icons.settings),
+                label: const Text('Abrir ajustes'),
+              ),
             TextButton.icon(
               onPressed: _buscandoUbicacion ? null : _capturarUbicacion,
               icon: const Icon(Icons.my_location),

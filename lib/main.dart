@@ -11,7 +11,6 @@ import 'package:alarmacacao5_0/services/notification_service.dart';
 
 // Pantallas
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
-import 'package:alarmacacao5_0/screens/clima_cacao_page.dart';
 import 'package:alarmacacao5_0/screens/configurar_lote_screen.dart';
 import 'package:alarmacacao5_0/screens/guia_prueba_corte_screen.dart';
 import 'package:alarmacacao5_0/screens/permisos_screen.dart';
@@ -86,8 +85,6 @@ class MyApp extends StatelessWidget {
       home: const PermisosScreen(),
       onGenerateRoute: (settings) {
         switch (settings.name) {
-          case '/clima':
-            return MaterialPageRoute(builder: (_) => const ClimaCacaoPage());
           case '/configurar':
             return MaterialPageRoute(builder: (_) => const ConfigurarLoteScreen());
           case '/guia-corte':

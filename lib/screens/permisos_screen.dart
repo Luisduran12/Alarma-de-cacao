@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
 import 'home_screen.dart';
 
 class PermisosScreen extends StatefulWidget {
-  const PermisosScreen({super.key});
+  /// Se pueden cambiar en pruebas.
+  final LocationService? ubicacion;
+
+  /// Pantalla a la que se pasa después (por defecto, la principal).
+  final WidgetBuilder? siguiente;
+
+  const PermisosScreen({super.key, this.ubicacion, this.siguiente});
 
   @override
   State<PermisosScreen> createState() => _PermisosScreenState();
@@ -12,6 +19,7 @@ class PermisosScreen extends StatefulWidget {
 class _PermisosScreenState extends State<PermisosScreen> {
   bool _isLoading = false;
   String? _mensaje;
+  bool _errorEsDePermiso = false;
 
   @override
   void initState() {
@@ -25,18 +33,25 @@ class _PermisosScreenState extends State<PermisosScreen> {
       _mensaje = null;
     });
     try {
-      final posicion = await LocationService().obtenerUbicacionActual(context);
+      // Solo se pide el permiso: NO se espera una posición GPS, para que la app
+      // abra rápido aunque el teléfono esté dentro de una casa o sin señal.
+      await (widget.ubicacion ?? LocationService()).asegurarPermiso();
       if (!mounted) return;
       setState(() {
-        _mensaje = 'Ubicación obtenida: Lat ${posicion.latitude}, Lon ${posicion.longitude}';
+        _mensaje = 'Permiso de ubicación listo.';
+        _errorEsDePermiso = false;
       });
-      // Navegar a HomeScreen tras éxito
-      Future.delayed(const Duration(seconds: 2), _continuar);
+      Future.delayed(const Duration(seconds: 1), _continuar);
+    } on UbicacionException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _mensaje = 'Error: ${e.mensaje}\nLa app sirve igual (alarmas y registros). Sin ubicación no podrá '
+            'marcar el punto de secado ni ver el clima de su lugar.';
+        _errorEsDePermiso = e.abrirAjustes;
+      });
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _mensaje = 'Error al obtener ubicación: $e';
-      });
+      setState(() => _mensaje = 'Error: no se pudo revisar el permiso de ubicación.');
     } finally {
       if (mounted) {
         setState(() {
@@ -49,7 +64,7 @@ class _PermisosScreenState extends State<PermisosScreen> {
   void _continuar() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen(title: 'Cacao Light 4.0')),
+      MaterialPageRoute(builder: widget.siguiente ?? (_) => const HomeScreen(title: 'Cacao Light 4.0')),
     );
   }
 
@@ -75,6 +90,12 @@ class _PermisosScreenState extends State<PermisosScreen> {
                         textAlign: TextAlign.center,
                       ),
                     const SizedBox(height: 20),
+                    if (_errorEsDePermiso)
+                      ElevatedButton.icon(
+                        onPressed: openAppSettings,
+                        icon: const Icon(Icons.settings),
+                        label: const Text('Abrir ajustes'),
+                      ),
                     ElevatedButton(
                       onPressed: _probarPermisos,
                       child: const Text('Reintentar Solicitar Permisos'),
