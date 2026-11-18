@@ -59,3 +59,39 @@ una pantalla de créditos en la app (Fase 6B) mostrará lo mismo.
   aplicación, un `User-Agent` que identifique la aplicación, guardar resultados en
   caché y no usarlo para autocompletar. La app ya espera al menos 1,1 s entre
   consultas y agrupa los puntos cercanos (≈ 110 m) para consultarlos una sola vez.
+
+## Fotos de referencia y de prueba para el análisis de fotos
+
+Las fotos NO son de esta app. Están en `backend/referencias/` (ejemplos que el servidor puede
+mandar a la IA) y en `evaluacion/galeria/` (solo para medir el acierto). Cada foto tiene en su
+`manifest.json` la fuente, los autores, el DOI y la licencia. Se separaron con
+`tool/importar_galeria.py` a partir de una galería armada a mano de conjuntos públicos.
+
+### Granos cortados (prueba de corte)
+- Datos: Oliveira, M. M.; Cerqueira, B. V.; Barbon Jr., S.; Barbin, D. F. *Images of fermented
+  cocoa beans from cut-test experiments for computer vision classification* [Conjunto de datos].
+  Zenodo. <https://doi.org/10.5281/zenodo.22824982>
+- Artículo: Oliveira et al. (2021), *Classification of fermented cocoa beans (cut test) using
+  computer vision*, Journal of Food Composition and Analysis, 97, 103771.
+  <https://doi.org/10.1016/j.jfca.2020.103771>
+- Licencia: CC BY 4.0 **según los metadatos de Zenodo**. El README del depósito dice que los
+  dueños deben confirmar la licencia final. **Pendiente: escribir a los autores y guardar su
+  respuesta antes de publicar la app o subir el repositorio.**
+- Son fotos de Brasil, en laboratorio y con tarjeta de color. No son la NTC 1252 ni fotos de
+  un celular en finca: el acierto medido con ellas NO es el acierto en Colombia.
+- Cambios: recorte alrededor del grano, reducción a 640 px y sin metadatos.
+- Clases de la fuente: bien fermentado, parcialmente fermentado, violeta y "pizarroso y/o con
+  moho" (la fuente junta pizarroso y moho en una sola clase).
+
+### Mazorcas con moniliasis (Colombia)
+- Datos: Alvarado Molina, J. F.; Restrepo-Arias, J. F.; Velásquez, D.; Branch Bedoya, J. W.;
+  Maiza, M. *CocoaMoniliaDataSet* [Conjunto de datos]. Zenodo (2025).
+  <https://doi.org/10.5281/zenodo.17716661>
+- Artículo: Data in Brief, 64, 112447 (2026). <https://doi.org/10.1016/j.dib.2025.112447>
+- Licencia: CC BY 4.0. Fotos con celular en fincas de Santander y Antioquia (no de Norte de Santander).
+- Etiquetas según la guía de la Compañía Nacional de Chocolates sobre moniliasis (ciclos 1 a 4)
+  y mazorca sana. Una foto puede mostrar varias mazorcas y la etiqueta puede referirse a una.
+- Cambios: reducción a 768 px y sin metadatos.
+
+Las licencias y DOI de este apartado se copiaron del manifiesto de la galería; el 2026-11-18 no
+se volvieron a comprobar en las páginas de Zenodo.
