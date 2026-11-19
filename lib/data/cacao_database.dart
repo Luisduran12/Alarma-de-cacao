@@ -10,6 +10,7 @@ import 'migracion_prefs.dart';
 ///  - recordatorios: avisos de medir la temperatura (no son registros).
 ///  - lugares:   caché de nombres de lugar resueltos por el servidor.
 ///  - chat_mensajes: historial de la conversación de cada lote (solo en el teléfono).
+///  - analisis_fotos: fotos de cada lote con su análisis, o en espera de señal.
 ///  - registros: volteadas programadas y datos medidos (fecha, temperatura,
 ///               humedad, observación, latitud, longitud, etapa y, opcionales,
 ///               pH, Brix y temperatura ambiente).
@@ -21,7 +22,8 @@ class CacaoDatabase {
   /// v4: tabla recordatorios (avisos de medir la temperatura cada 12 h).
   /// v5: tabla lugares (nombres de lugar resueltos por el servidor, como caché).
   /// v6: tabla chat_mensajes (historial del chat por lote).
-  static const int version = 6;
+  /// v7: tabla analisis_fotos (fotos y su análisis, con cola para cuando no hay señal).
+  static const int version = 7;
 
   static Future<Database>? _instancia;
 
@@ -51,6 +53,7 @@ class CacaoDatabase {
           if (anterior < 4) await _crearRecordatorios(db);
           if (anterior < 5) await _crearLugares(db);
           if (anterior < 6) await _crearChatMensajes(db);
+          if (anterior < 7) await _crearAnalisisFotos(db);
         },
       ),
     );
@@ -94,6 +97,27 @@ class CacaoDatabase {
     await _crearRecordatorios(db);
     await _crearLugares(db);
     await _crearChatMensajes(db);
+    await _crearAnalisisFotos(db);
+  }
+
+  /// Cada foto se guarda reducida y sin metadatos (el archivo está en `ruta`). `estado`: pendiente
+  /// (espera señal), analizada (con `resultado`, el JSON del servidor) o error (el servidor la rechazó).
+  static Future<void> _crearAnalisisFotos(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE analisis_fotos (
+        id            TEXT PRIMARY KEY,
+        lote_id       TEXT NOT NULL REFERENCES lotes(id) ON DELETE CASCADE,
+        modo          TEXT NOT NULL,
+        ruta          TEXT NOT NULL,
+        estado        TEXT NOT NULL,
+        resultado     TEXT,
+        creado_en     TEXT NOT NULL,
+        analizado_en  TEXT,
+        intentos      INTEGER NOT NULL DEFAULT 0,
+        ultimo_error  TEXT
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_fotos_lote ON analisis_fotos(lote_id)');
   }
 
   /// Historial del chat: una conversación por lote, que se borra junto con el lote.

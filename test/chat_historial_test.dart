@@ -25,9 +25,9 @@ void main() {
   });
   tearDown(() => db.close());
 
-  test('la base está en la versión 6 y tiene la tabla', () async {
-    expect(CacaoDatabase.version, 6);
-    expect(await db.getVersion(), 6);
+  test('la base tiene la tabla del chat (desde la versión 6)', () async {
+    expect(CacaoDatabase.version, greaterThanOrEqualTo(6));
+    expect(await db.getVersion(), CacaoDatabase.version);
     final t = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='chat_mensajes'");
     expect(t, hasLength(1));
   });
@@ -102,7 +102,7 @@ void main() {
     expect(m.origen, OrigenMensaje.sistema);
   });
 
-  test('migración desde la versión 5: conserva lotes y crea la tabla', () async {
+  test('migración desde la versión 5: conserva lotes y crea la tabla del chat', () async {
     final dir = await Directory.systemTemp.createTemp('cacao_v5');
     addTearDown(() => dir.delete(recursive: true));
     final ruta = p.join(dir.path, 'v5.db');
@@ -110,12 +110,13 @@ void main() {
         options: OpenDatabaseOptions(version: 5, onCreate: (d, _) async {
           await CacaoDatabase.crearTablas(d);
           await d.execute('DROP TABLE chat_mensajes');
+          await d.execute('DROP TABLE analisis_fotos');
           await d.insert('lotes', Lote(id: 'V', title: 'Viejo', status: 'en proceso', createdAt: DateTime(2026)).toRow());
         }));
     expect(await vieja.getVersion(), 5);
     await vieja.close();
     final nueva = await CacaoDatabase.abrir(databaseFactoryFfi, ruta);
-    expect(await nueva.getVersion(), 6);
+    expect(await nueva.getVersion(), CacaoDatabase.version);
     expect((await nueva.query('lotes')).single['titulo'], 'Viejo');
     await ChatHistorial(database: () async => nueva).agregar('V', RolChat.usuario, 'hola');
     expect(await nueva.query('chat_mensajes'), hasLength(1));
