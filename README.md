@@ -131,8 +131,8 @@ flutter test --coverage          # informe en coverage/lcov.info
 cd backend && npm install && npm test
 ```
 
-Al 2026-11-18: **587 pruebas de la app** y **241 del servidor**, todas pasan; `flutter analyze lib test` da 4 avisos
-informativos (APIs obsoletas y estilo) y ningún error. Cobertura de líneas de la app: **79,8 %** (3.670 de 4.598 líneas
+Al 2026-11-18: **625 pruebas de la app** y **241 del servidor**, todas pasan; `flutter analyze lib test` da 4 avisos
+informativos (APIs obsoletas y estilo) y ningún error. Cobertura de líneas de la app: **81,4 %** (3.749 de 4.605 líneas
 de los 81 archivos que las pruebas cargan; `lib/app.dart` y `lib/utils/csv_utils.dart` no los carga ninguna prueba).
 Las pruebas de accesibilidad (`test/accesibilidad_*`) usan las guías de Flutter; **no reemplazan probar con TalkBack**.
 En cada `push` corre GitHub Actions (`.github/workflows/ci.yml`).

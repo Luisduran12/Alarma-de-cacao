@@ -24,6 +24,10 @@ publicada**: es la que se prepara para la entrega.
 - **Ajustes:** autorizaciones (ubicación, fotos, voz), ahorro de batería y "Borrar todos mis datos".
 - Integración continua en GitHub Actions (aún sin ejecutar allí), README y documentación en `docs/`.
 
+### Corregido
+- Borrar un lote ahora también borra los archivos de sus fotos.
+- Contraste del texto sobre tarjetas de color en alto contraste.
+
 ### Cambiado
 - La ubicación ya no se pide al abrir la app: primero se explica y se pide autorización (Ley 1581 de 2012).
 - Compatibilidad con Flutter estable (`sqflite_common_ffi`); AGP 8.9.1 y `compileSdk` 36.
