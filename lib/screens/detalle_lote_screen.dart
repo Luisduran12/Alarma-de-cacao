@@ -24,6 +24,9 @@ import '../services/lugar_service.dart';
 import '../widgets/selector_lote_dialog.dart';
 import 'confirmar_volteada_screen.dart';
 import 'chat_screen.dart';
+import 'fotos_lote_screen.dart';
+import '../services/foto_service.dart';
+import '../services/selector_foto.dart';
 import 'guia_prueba_corte_screen.dart';
 import '../services/chat_historial.dart';
 import '../services/chat_service.dart';
@@ -38,9 +41,19 @@ class DetalleLoteScreen extends StatefulWidget {
   final LugarService? lugarService;
   final ChatHistorial? chatHistorial;
   final ChatService? chatService;
+  final FotoService? fotoService;
+  final SelectorFoto? selectorFoto;
 
   const DetalleLoteScreen(
-      {super.key, required this.lote, this.loteService, this.scheduler, this.lugarService, this.chatHistorial, this.chatService});
+      {super.key,
+      required this.lote,
+      this.loteService,
+      this.scheduler,
+      this.lugarService,
+      this.chatHistorial,
+      this.chatService,
+      this.fotoService,
+      this.selectorFoto});
 
   @override
   State<DetalleLoteScreen> createState() => _DetalleLoteScreenState();
@@ -505,6 +518,16 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
                         lote: _lote, loteService: _loteService, historial: widget.chatHistorial, chat: widget.chatService))),
                 icon: const Icon(Icons.forum_outlined),
                 label: const Text('Preguntar sobre mi lote'),
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: FilledButton.tonalIcon(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => FotosLoteScreen(lote: _lote, servicio: widget.fotoService, selector: widget.selectorFoto))),
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: const Text('Fotos del lote (análisis con IA)'),
                 style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
               ),
             ),
