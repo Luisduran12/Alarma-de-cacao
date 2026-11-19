@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -164,5 +166,33 @@ void main() {
     expect(primeras.map((v) => v.notifId).toSet(), hasLength(3));
     final horas = primeras.map((v) => v.fechaProgramada.difference(v.fecha).inHours).toSet();
     expect(horas, hasLength(1), reason: 'misma hora relativa, distinto ID');
+  });
+
+  test('borrar un lote borra también los archivos de SUS fotos y no los de otros lotes', () async {
+    final l = await tresLotes();
+    final dir = await Directory.systemTemp.createTemp('fotos_lote_');
+    addTearDown(() => dir.delete(recursive: true));
+    final archivos = <String, File>{};
+    for (final (id, lote) in [('a1', l[0]), ('a2', l[0]), ('b1', l[1])]) {
+      final f = File('${dir.path}/$id.jpg')..writeAsBytesSync([1, 2, 3]);
+      archivos[id] = f;
+      await db.insert('analisis_fotos',
+          {'id': id, 'lote_id': lote.id, 'modo': 'corte', 'ruta': f.path, 'estado': 'pendiente', 'creado_en': '2026-11-18'});
+    }
+
+    await lotes.deleteLote(l[0].id);
+
+    expect(archivos['a1']!.existsSync(), isFalse);
+    expect(archivos['a2']!.existsSync(), isFalse);
+    expect(archivos['b1']!.existsSync(), isTrue, reason: 'la foto de otro lote no se toca');
+    expect(await db.query('analisis_fotos'), hasLength(1));
+  });
+
+  test('borrar un lote cuya foto ya no existe en el teléfono no falla', () async {
+    final l = await tresLotes();
+    await db.insert('analisis_fotos',
+        {'id': 'x', 'lote_id': l[0].id, 'modo': 'corte', 'ruta': '/no/existe/x.jpg', 'estado': 'pendiente', 'creado_en': '2026-11-18'});
+    await lotes.deleteLote(l[0].id);
+    expect((await lotes.loadLotes()).map((x) => x.id), isNot(contains(l[0].id)));
   });
 }

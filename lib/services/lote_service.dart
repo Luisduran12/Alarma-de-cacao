@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -142,9 +144,21 @@ class LoteService {
         debugPrint('No se pudo cancelar la notificación ${r['notif_id']}: $e');
       }
     }
+    // Las rutas de las fotos se leen ANTES: al borrar el lote, sus filas de analisis_fotos se borran en cascada.
+    final fotos = await db.query('analisis_fotos', columns: ['ruta'], where: 'lote_id = ?', whereArgs: [loteId]);
     await db.transaction((txn) async {
       await txn.delete('registros', where: 'lote_id = ?', whereArgs: [loteId]);
       await txn.delete('lotes', where: 'id = ?', whereArgs: [loteId]);
     });
+    // Los archivos se borran después de que la base quedó bien: si fallara uno, el lote ya no existe y no se
+    // pierde nada más (a lo sumo queda un archivo suelto, que "Borrar todos mis datos" también limpia).
+    for (final f in fotos) {
+      try {
+        final archivo = File(f['ruta'] as String);
+        if (await archivo.exists()) await archivo.delete();
+      } catch (e) {
+        debugPrint('No se pudo borrar la foto ${f['ruta']}: $e');
+      }
+    }
   }
 }
