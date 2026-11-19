@@ -44,7 +44,7 @@ dependencies:
   # 4.11.0 declara archive ^4.0.9 pero usa ZLibDecoder.decodeLazy, que archive 4.0.9 no tiene: no compila. 4.8.0 sí.
   image: '>=4.8.0 <4.9.0'
   file_picker: ^11.0.3
-  speech_to_text: ^7.4.0
+  speech_to_text: ^7.5.0
 
 dev_dependencies:
   flutter_test:
