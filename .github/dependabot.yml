@@ -7,6 +7,13 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    # Ignorados POR AHORA: sus versiones nuevas exigen un Dart más reciente que el de Flutter 3.38.9 (Dart 3.10.8) y el
+    # CI falla al resolver dependencias (url_launcher 6.3.3 pide Dart ^3.11, speech_to_text 7.5.0 y cupertino_icons 2.0.0
+    # piden ^3.12). Quitar estas líneas cuando se suba la versión de Flutter (ver docs/seguridad-app.md, pendientes).
+    ignore:
+      - dependency-name: "url_launcher"
+      - dependency-name: "speech_to_text"
+      - dependency-name: "cupertino_icons"
 
   - package-ecosystem: "npm"
     directory: "/backend"
