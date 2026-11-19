@@ -25,6 +25,9 @@ import 'package:alarmacacao5_0/screens/chat_screen.dart';
 import 'package:alarmacacao5_0/screens/comparacion_lotes_screen.dart';
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
 import 'package:alarmacacao5_0/screens/detalle_lote_screen.dart';
+import 'package:alarmacacao5_0/screens/fotos_lote_screen.dart';
+import 'package:alarmacacao5_0/screens/nueva_foto_screen.dart';
+import 'package:alarmacacao5_0/screens/resultado_foto_screen.dart';
 import 'package:alarmacacao5_0/screens/clima_screen.dart';
 import 'package:alarmacacao5_0/screens/guia_prueba_corte_screen.dart';
 import 'package:alarmacacao5_0/screens/home_screen.dart';
@@ -32,7 +35,11 @@ import 'package:alarmacacao5_0/screens/reglas_alerta_screen.dart';
 import 'package:alarmacacao5_0/services/chat_historial.dart';
 import 'package:alarmacacao5_0/services/chat_service.dart';
 import 'package:alarmacacao5_0/services/clima_service.dart';
+import 'package:alarmacacao5_0/models/analisis_foto.dart';
 import 'package:alarmacacao5_0/services/exportar_curva.dart';
+import 'package:alarmacacao5_0/services/foto_preparada.dart';
+import 'package:alarmacacao5_0/services/foto_service.dart';
+import 'package:alarmacacao5_0/services/consentimiento_fotos.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
 import 'package:alarmacacao5_0/widgets/curva_lote_chart.dart';
@@ -443,4 +450,111 @@ void main() {
 
   testWidgets('fase5 detalle del lote con el boton del chat',
       (t) => _capturar(t, DetalleLoteScreen(lote: _loteCurso), 'fase5/f5_detalle_boton_chat.png', alto: 1900));
+
+  // ---- Fase 6: fotos del lote ----
+  // OJO: los resultados de estas capturas son TEXTO DE EJEMPLO ("EJEMPLO SIMULADO") de un servidor
+  // simulado. NO son análisis reales de la IA. Las fotos son de la galería de referencia (CC BY 4.0,
+  // ver docs/creditos.md).
+  Map<String, Object?> respuestaEjemplo(String modo, String semaforo, {bool repetir = false}) => {
+        'modo': modo, 'foto_valida': true, 'repetir_foto': repetir, 'motivo': 'ninguno',
+        'mensaje': repetir ? 'La foto salió borrosa. Tome otra, con el teléfono quieto y bien enfocada.' : '',
+        'categorias': repetir
+            ? []
+            : modo == 'corte'
+                ? [{'nombre': 'bien_fermentado', 'porcentaje': 70}, {'nombre': 'parcialmente_fermentado', 'porcentaje': 20}, {'nombre': 'violeta', 'porcentaje': 10}]
+                : [{'nombre': 'sana', 'porcentaje': 30}, {'nombre': 'monilia', 'porcentaje': 70}],
+        'confianza': repetir ? 'baja' : 'media',
+        'posibles_causas': repetir ? [] : ['EJEMPLO SIMULADO: texto de ejemplo, no es un análisis real.'],
+        'pasos_recomendados': repetir ? ['EJEMPLO SIMULADO: limpie el lente y vuelva a intentar.'] : ['EJEMPLO SIMULADO: consulte al técnico.'],
+        'semaforo': semaforo,
+        'aviso': 'Estimación orientativa. La clasificación oficial es la prueba de corte de la NTC 1252. Ante duda, consulte al técnico.',
+      };
+
+  FotoService servicioFotos(Directory dir, Map<String, Object?>? Function(String modo) respuesta) => FotoService(
+        cliente: MockClient((r) async {
+          final modo = (jsonDecode(r.body) as Map)['modo'] as String;
+          final j = respuesta(modo);
+          if (j == null) throw http.ClientException('sin red');
+          return http.Response.bytes(utf8.encode(jsonEncode(j)), 200, headers: {'content-type': 'application/json; charset=utf-8'});
+        }),
+        urlServidor: 'https://api.cacaolight.example/v1',
+        idInstalacion: () async => '3f2b8c1e-9d4a-4b7e-8a1c-0e5d6f7a8b9c',
+        directorio: () async => dir,
+      );
+
+  Future<FotoPreparada> deGaleria(String carpeta) async {
+    final archivos = Directory(carpeta).listSync().whereType<File>().where((f) => f.path.endsWith('.jpg')).toList()..sort((a, b) => a.path.compareTo(b.path));
+    return FotoPreparada(archivos.first.readAsBytesSync(), 640, 480);
+  }
+
+  Future<(FotoService, AnalisisFoto, AnalisisFoto, AnalisisFoto)> sembrarFotos(WidgetTester t) async {
+    return (await t.runAsync(() async {
+      await FotoService().borrarDelLote('curso').catchError((_) {});
+      await (await CacaoDatabase.instancia()).delete('analisis_fotos');
+      final dir = await Directory.systemTemp.createTemp('fotos_capturas');
+      final con = servicioFotos(dir, (m) => respuestaEjemplo(m, m == 'corte' ? 'verde' : 'rojo'));
+      final sin = servicioFotos(dir, (m) => null);
+      final corte = await con.guardar(loteId: 'curso', modo: ModoAnalisis.corte,
+          foto: await deGaleria('evaluacion/galeria/cortes/brown'));
+      final maz = await con.guardar(loteId: 'curso', modo: ModoAnalisis.mazorcaHoja,
+          foto: await deGaleria('evaluacion/galeria/mazorcas/m3'));
+      final pend = await sin.guardar(loteId: 'curso', modo: ModoAnalisis.corte,
+          foto: await deGaleria('evaluacion/galeria/cortes/violet'));
+      final a = await con.analizar(corte.id);
+      final b = await con.analizar(maz.id);
+      return (con, a, b, pend);
+    }))!;
+  }
+
+  testWidgets('fase6 lista de fotos del lote', (t) async {
+    final (_, __, ___, ____) = await sembrarFotos(t);
+    final dir = Directory.systemTemp;
+    await _capturar(t, FotosLoteScreen(lote: _loteCurso, servicio: servicioFotos(dir, (m) => null)), 'fase6/f6_lista_fotos.png', alto: 1500,
+        interaccion: (t) async {
+      for (var i = 0; i < 12; i++) {
+        await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
+        await t.pump(const Duration(milliseconds: 80));
+      }
+    });
+  });
+
+  testWidgets('fase6 guia de la foto de corte', (t) async {
+    await _capturar(t, NuevaFotoScreen(loteId: 'curso', servicio: servicioFotos(Directory.systemTemp, (m) => null)),
+        'fase6/f6_guia_corte.png', alto: 1700, interaccion: (t) async {
+      await t.tap(find.text('Prueba de corte'));
+      await t.pump(const Duration(milliseconds: 400));
+    });
+  });
+
+  testWidgets('fase6 permiso para enviar la foto', (t) async {
+    SharedPreferences.setMockInitialValues({'migrado_a_sqlite_v1': true});
+    await _capturar(t, NuevaFotoScreen(loteId: 'curso', servicio: servicioFotos(Directory.systemTemp, (m) => null)),
+        'fase6/f6_permiso.png', alto: 1200, interaccion: (t) async {
+      await t.tap(find.text('Prueba de corte'));
+      await t.pump(const Duration(milliseconds: 400));
+      await t.tap(find.text('Tomar la foto'));
+      for (var i = 0; i < 6; i++) {
+        await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 60)));
+        await t.pump(const Duration(milliseconds: 100));
+      }
+    });
+  });
+
+  testWidgets('fase6 resultado verde de corte', (t) async {
+    final (_, corte, __, ___) = await sembrarFotos(t);
+    await _capturar(t, ResultadoFotoScreen(analisis: corte, servicio: servicioFotos(Directory.systemTemp, (m) => null)),
+        'fase6/f6_resultado_verde.png', alto: 1700);
+  });
+
+  testWidgets('fase6 resultado rojo de mazorca', (t) async {
+    final (_, __, maz, ___) = await sembrarFotos(t);
+    await _capturar(t, ResultadoFotoScreen(analisis: maz, servicio: servicioFotos(Directory.systemTemp, (m) => null)),
+        'fase6/f6_resultado_rojo.png', alto: 1700);
+  });
+
+  testWidgets('fase6 foto en espera de senal', (t) async {
+    final (_, __, ___, pend) = await sembrarFotos(t);
+    await _capturar(t, ResultadoFotoScreen(analisis: pend, servicio: servicioFotos(Directory.systemTemp, (m) => null)),
+        'fase6/f6_en_espera.png', alto: 1100);
+  });
 }

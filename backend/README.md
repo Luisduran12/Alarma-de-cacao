@@ -120,6 +120,9 @@ caracteres), y un almacén Redis (`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST
 **En producción, si falta el almacén o el secreto, el servidor rechaza todo** en lugar de
 dejar pasar consultas sin límite.
 
+Opcional: `REFERENCIAS_POR_CLASE` (0 a 5, por defecto 0): fotos de ejemplo de `referencias/` que se mandan
+con cada foto. Déjela en 0 hasta medir con `npm run evaluar` (ver `docs/evaluacion.md`) que ayuda.
+
 Límites por defecto (son propuestas de esta app para acotar gasto y abuso, no datos de
 ninguna fuente; se cambian con variables): 30 preguntas y 10 fotos por instalación y por día,
 100 consultas de lugar, 300 consultas por IP y hora, y un **tope de gasto de 5 USD por día**
@@ -131,7 +134,8 @@ para todo el servidor. Interruptores de emergencia: `BLOQUEO_TOTAL=1` (pausa cha
 ```bash
 cd backend
 npm install --ignore-scripts
-npm test            # 205 pruebas
+npm test            # 241 pruebas
+npm run evaluar -- --ayuda   # mide el acierto de las fotos (ver docs/evaluacion.md)
 npm run typecheck
 ```
 
