@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Gancho OPCIONAL: bloquea commits que traigan claves, keystores o archivos secretos.
+# Activar (una vez por clon):  git config core.hooksPath .githooks
+# No reemplaza la revisión de gitleaks del CI; es una primera barrera rápida. Si es un falso positivo y está seguro,
+# se puede saltar con:  git commit --no-verify   (no lo haga con claves reales: revóquelas).
+set -u
+
+fallo=0
+rojo() { printf '\033[31m%s\033[0m\n' "$1" >&2; }
+
+# 1) Archivos que nunca deben subirse (por nombre)
+while IFS= read -r f; do
+  case "$f" in
+    *.jks|*.keystore|*.pem|*.p12|*.pfx|*.apk|*.aab|*.bundle|*.db|*.sqlite|*.sqlite3)
+      rojo "BLOQUEADO: archivo que no debe subirse: $f"; fallo=1 ;;
+    key.properties|*/key.properties|.env|*/.env|.env.*|*/.env.*)
+      case "$f" in *.example|*.ejemplo) ;; *) rojo "BLOQUEADO: archivo de secretos: $f"; fallo=1 ;; esac ;;
+    cacao_light_respaldo_*.json|*/cacao_light_respaldo_*.json)
+      rojo "BLOQUEADO: copia de seguridad de la app (datos de productores): $f"; fallo=1 ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACMR)
+
+# 2) Patrones de claves en las líneas AÑADIDAS
+patrones='sk-ant-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{32,}|AIza[0-9A-Za-z_-]{35}|ghp_[A-Za-z0-9]{30,}|gho_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|xox[baprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|ff15'"52a5"'
+asignacion='(api[_-]?key|secret|passw(or)?d|token|storePassword|keyPassword)["'"'"']?[[:space:]]*[:=][[:space:]]*["'"'"'][A-Za-z0-9/+_=.-]{16,}["'"'"']'
+
+lineas=$(git diff --cached -U0 --no-color --diff-filter=ACMR -- . ':!package-lock.json' ':!pubspec.lock' | grep -E '^\+[^+]' || true)
+if [ -n "$lineas" ]; then
+  if printf '%s\n' "$lineas" | grep -qE "$patrones"; then
+    rojo "BLOQUEADO: una línea nueva parece contener una CLAVE:"
+    printf '%s\n' "$lineas" | grep -E "$patrones" | cut -c1-12 | sed 's/$/…(oculto)/' >&2
+    fallo=1
+  fi
+  if printf '%s\n' "$lineas" | grep -iE "$asignacion" | grep -viE 'example|ejemplo|placeholder|<[a-z_ -]+>|\$\{|xxxx|\.\.\.' | grep -q .; then
+    rojo "BLOQUEADO: una línea nueva asigna un valor largo a api_key/secret/password/token:"
+    printf '%s\n' "$lineas" | grep -iE "$asignacion" | grep -viE 'example|ejemplo|placeholder|<[a-z_ -]+>|\$\{|xxxx|\.\.\.' | cut -c1-40 | sed 's/$/…(oculto)/' >&2
+    fallo=1
+  fi
+fi
+
+if [ "$fallo" -ne 0 ]; then
+  rojo "Commit cancelado. Si ya escribió una clave real, REVÓQUELA aunque no llegue a subirla."
+  exit 1
+fi
+exit 0

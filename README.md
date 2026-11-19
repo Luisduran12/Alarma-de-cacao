@@ -177,6 +177,16 @@ Política (Ley 1581 de 2012): `docs/privacidad.md` y dentro de la app (Ajustes).
 `docs/creditos.md`. Anthropic puede conservar lo que recibe por la API hasta 30 días. La clave de OpenWeatherMap que
 estuvo en el primer commit (`cb55257`) quedó expuesta en el historial público: debe revocarse; la app ya no la usa.
 
+## Seguridad del repositorio
+
+Reporte de vulnerabilidades, secretos y qué no publicar: [`SECURITY.md`](SECURITY.md). En cada push corre una revisión de
+secretos (gitleaks) y Dependabot revisa las dependencias cada semana. Gancho local **opcional** que bloquea commits con
+claves, keystores o `.env` (se activa una vez por clon):
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Trabajo pendiente
 
 - Probar en teléfonos Android reales (alarmas con la app cerrada y tras reiniciar, GPS, cámara, TalkBack).
