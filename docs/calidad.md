@@ -36,7 +36,7 @@ Android real.**
 | Subcaracterística | Evidencia | Estado |
 |---|---|---|
 | Comportamiento temporal | Sin medición. Decisiones de diseño: GPS espera máximo 30 s y usa la última ubicación; la app abre sin esperar un fix (`location_service_test`); todo lo esencial es local (SQLite). | ⬜ medición |
-| Utilización de recursos | Fotos reducidas a 1024 px y sin metadatos antes de enviarse (`foto_preparada_test`); sin ubicación continua ni servicios en segundo plano (revisión del código: no hay `getPositionStream`, `Timer` de fondo ni WorkManager; solo alarmas del sistema); el ahorro de batería quita el video de fondo, los nombres de lugar y el reintento automático (`lib/main.dart`, `home_screen.dart`, `fotos_lote_screen.dart`). | 🟡 diseño, sin medir en teléfono |
+| Utilización de recursos | Fotos reducidas a 1024 px y sin metadatos antes de enviarse (`foto_preparada_test`); sin ubicación continua ni servicios en segundo plano (revisión del código: no hay `getPositionStream`, WorkManager ni servicios en primer plano; solo alarmas del sistema y un temporizador de 30 s de la barra de progreso mientras está visible); el ahorro de batería quita el video de fondo, los nombres de lugar y el reintento automático (`lib/main.dart`, `home_screen.dart`, `fotos_lote_screen.dart`). | 🟡 diseño, sin medir en teléfono |
 | Capacidad | Límites del servidor y tope de gasto diario (`backend/test/almacen_limites_costos.test.ts`); la base local es SQLite con índices por lote. No se probó con muchos lotes ni con fotos de 12 MP en gama baja. | 🟡 |
 
 ## 3. Compatibilidad
@@ -56,7 +56,7 @@ Android real.**
 | Operabilidad | Botones de al menos 48 dp (`accesibilidad_tema_test`); letra normal, grande y muy grande (1, 1,3 y 1,6) sin desbordes al 200 % en 360×640 (`ajustes_test`); dictado por voz opcional (`dictado_test`, con motor simulado). | ✅ en pruebas |
 | Protección contra errores del usuario | Confirmaciones al borrar y al recuperar una copia; validación de rangos al registrar; la foto borrosa pide otra en vez de adivinar. | ✅ |
 | Estética de la interfaz | Sin evaluación. | ⬜ |
-| Accesibilidad | Auditoría automática con las guías de Flutter (objetivo táctil 48 dp, etiquetas, contraste de texto) en 9 pantallas, con tema normal y de alto contraste (`accesibilidad_pantallas_test`, 54 pruebas); contraste WCAG 2.1 AA calculado (`accesibilidad_tema_test`). La auditoría encontró y se corrigió un fallo de contraste (2,33:1) en las tarjetas de color. **Sin probar con TalkBack ni con personas.** Pantallas sin auditar: inicio, registro de volteada, chat, clima, fotos. | 🟡 |
+| Accesibilidad | Auditoría automática con las guías de Flutter (objetivo táctil 48 dp, etiquetas, contraste de texto) en 8 pantallas (Ajustes, Política, Créditos, Ayuda, guía de la prueba de corte, resultado de foto, pregunta de ubicación y detalle del lote), con tema normal y de alto contraste (`accesibilidad_pantallas_test`, 48 pruebas); contraste WCAG 2.1 AA calculado (`accesibilidad_tema_test`). La auditoría encontró y se corrigió un fallo de contraste (2,33:1) en las tarjetas de color. **Sin probar con TalkBack ni con personas.** Pantallas sin auditar: inicio, registro de volteada, chat, clima, fotos. | 🟡 |
 | Validación con productores | Pendiente: encuesta y guion en la Fase 8; no hay resultados. | ⬜ |
 
 ## 5. Fiabilidad
@@ -66,7 +66,7 @@ Android real.**
 | Madurez | 587 pruebas; sin uso real. | 🟡 |
 | Disponibilidad | Lo esencial funciona sin internet (SQLite, alarmas del sistema, guía local). Las alarmas con la app cerrada y tras reiniciar **no se han probado en un teléfono**. | 🟡 |
 | Tolerancia a fallos | Si una notificación falla, el guardado sigue (`alertas_ui_test`); si el GPS no responde, se usa la última ubicación y se avisa; si no hay señal, las fotos quedan en cola (`fotos_pantallas_test`); si falla un paso de "Borrar todo", se informa cuál (`copia_seguridad_test`). | ✅ |
-| Capacidad de recuperación | Respaldo exportar/importar validado y todo-o-nada: un archivo malo (30 casos) o un fallo a mitad no cambia nada y devuelve las alarmas (`copia_seguridad_test`); red de seguridad que reprograma alarmas perdidas al abrir la app (`alarm_scheduler_test`, `varios_lotes_test`); migración de datos antiguos (`migracion_v3_test`, `lote_service_test`). | ✅ |
+| Capacidad de recuperación | Respaldo exportar/importar validado y todo-o-nada: un archivo malo (16 casos de validación) o un fallo a mitad no cambia nada y devuelve las alarmas (`copia_seguridad_test`); red de seguridad que reprograma alarmas perdidas al abrir la app (`alarm_scheduler_test`, `varios_lotes_test`); migración de datos antiguos (`migracion_v3_test`, `lote_service_test`). | ✅ |
 
 ## 6. Seguridad
 
