@@ -22,3 +22,9 @@ Antes de guardar fotos de productores, hace falta su permiso por escrito y que n
 persona ni dato identificable. Si la carpeta se sube a un repositorio público, esas fotos quedan públicas.
 
 Para medir: `cd backend && npm run evaluar -- --estimar --conjunto colombia`
+
+## Archivos de esta carpeta
+
+- `ficha-tecnico.md`: ficha para el técnico (cómo tomar y clasificar las fotos).
+- `manifest.plantilla.json`: plantilla del `manifest.json` (cópiela y llénela).
+- Todavía **no hay fotos ni `manifest.json`**: esta carpeta está vacía de datos.

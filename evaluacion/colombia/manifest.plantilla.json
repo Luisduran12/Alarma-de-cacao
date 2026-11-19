@@ -1,0 +1,10 @@
+[
+  {
+    "archivo": "<nombre-de-la-foto>.jpg",
+    "modo": "corte",
+    "etiqueta": "bien_fermentado",
+    "tecnico": "<rol de quien la clasificó, p. ej. técnico de la asociación>",
+    "fecha": "<AAAA-MM-DD>",
+    "lugar": "<municipio o vereda, sin coordenadas>"
+  }
+]

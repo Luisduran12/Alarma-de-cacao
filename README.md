@@ -182,5 +182,5 @@ estuvo en el primer commit (`cb55257`) quedó expuesta en el historial público:
 - Probar en teléfonos Android reales (alarmas con la app cerrada y tras reiniciar, GPS, cámara, TalkBack).
 - Desplegar el servidor y medir el acierto de la IA con fotos locales clasificadas por un técnico (carpeta `evaluacion/colombia/`).
 - Que un técnico revise los textos de las guías; validar la pauta de volteo con el protocolo vigente de FEDECACAO.
-- Validación de usabilidad con productores (Fase 8, todavía sin hacer).
+- Validación de usabilidad con 3 a 5 productores: el material está en `docs/validacion/` (plantillas vacías); la validación **todavía no se ha hecho**.
 - Play Integrity no está implementado (`docs/backend-seguridad.md`).
