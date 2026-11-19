@@ -52,10 +52,16 @@ class AyudaScreen extends StatelessWidget {
 class _Aviso extends StatelessWidget {
   const _Aviso();
   @override
-  Widget build(BuildContext context) => Card(
-        color: Theme.of(context).colorScheme.secondaryContainer,
-        child: const Padding(padding: EdgeInsets.all(12), child: Text(avisoGuia)),
-      );
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).colorScheme;
+    return Card(
+      color: c.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(avisoGuia, style: TextStyle(color: c.onSecondaryContainer, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
 }
 
 class _Guia extends StatelessWidget {

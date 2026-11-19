@@ -107,11 +107,11 @@ class _FotosLoteScreenState extends State<FotosLoteScreen> {
                       padding: const EdgeInsets.all(12),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Row(children: [
-                          const Icon(Icons.cloud_off),
+                          Icon(Icons.cloud_off, color: tema.colorScheme.onSecondaryContainer),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text('$_pendientes ${_pendientes == 1 ? 'foto espera' : 'fotos esperan'} señal para analizarse',
-                                style: tema.textTheme.titleMedium),
+                                style: tema.textTheme.titleMedium?.copyWith(color: tema.colorScheme.onSecondaryContainer)),
                           ),
                         ]),
                         const SizedBox(height: 8),

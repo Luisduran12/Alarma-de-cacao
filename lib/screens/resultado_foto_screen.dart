@@ -118,23 +118,27 @@ class _ResultadoFotoScreenState extends State<ResultadoFotoScreen> {
         _tarjeta(tema, Icons.error_outline, 'No se pudo analizar', _a.ultimoError ?? 'Tome otra foto.', error: true),
       ];
 
-  Widget _tarjeta(ThemeData tema, IconData icono, String titulo, String texto, {required bool error}) => Card(
-        color: error ? tema.colorScheme.errorContainer : tema.colorScheme.secondaryContainer,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(icono),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(titulo, style: tema.textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(texto, style: tema.textTheme.bodyLarge),
-              ]),
-            ),
-          ]),
-        ),
-      );
+  Widget _tarjeta(ThemeData tema, IconData icono, String titulo, String texto, {required bool error}) {
+    // Texto e ícono con el color pensado para ese fondo (si no, en alto contraste quedan casi invisibles).
+    final sobre = error ? tema.colorScheme.onErrorContainer : tema.colorScheme.onSecondaryContainer;
+    return Card(
+      color: error ? tema.colorScheme.errorContainer : tema.colorScheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icono, color: sobre),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(titulo, style: tema.textTheme.titleMedium?.copyWith(color: sobre)),
+              const SizedBox(height: 4),
+              Text(texto, style: tema.textTheme.bodyLarge?.copyWith(color: sobre)),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
 
   List<Widget> _resultado(ThemeData tema, ResultadoAnalisis r) {
     if (r.repetirFoto) {
@@ -173,7 +177,10 @@ class _ResultadoFotoScreenState extends State<ResultadoFotoScreen> {
       const SizedBox(height: 12),
       Card(
         color: tema.colorScheme.secondaryContainer,
-        child: Padding(padding: const EdgeInsets.all(12), child: Text(r.aviso, style: tema.textTheme.bodyLarge)),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Text(r.aviso, style: tema.textTheme.bodyLarge?.copyWith(color: tema.colorScheme.onSecondaryContainer)),
+        ),
       ),
     ];
   }
