@@ -54,7 +54,7 @@ void main() {
 
   setUp(() {
     plataforma = _Falsa()..posicion = _pos(7.6031, -72.6012);
-    servicio = LocationService(plataforma: plataforma);
+    servicio = LocationService(plataforma: plataforma, consentimiento: () async => true);
   });
 
   group('asegurarPermiso', () {
@@ -167,7 +167,10 @@ void main() {
 
   group('PermisosScreen (primera pantalla de la app)', () {
     Widget pantalla() => MaterialApp(
-          home: PermisosScreen(ubicacion: servicio, siguiente: (_) => const Scaffold(body: Text('PANTALLA PRINCIPAL'))),
+          home: PermisosScreen(
+              ubicacion: servicio,
+              siguiente: (_) => const Scaffold(body: Text('PANTALLA PRINCIPAL')),
+              leerConsentimiento: () async => true),
         );
 
     testWidgets('con permiso: lo dice, NO espera un fix de GPS y pasa sola a la pantalla principal', (t) async {
@@ -197,5 +200,73 @@ void main() {
       await t.pump();
       expect(find.text('Abrir ajustes'), findsOneWidget);
     });
+
+    testWidgets('sin autorización previa: explica y pregunta ANTES de pedir el permiso del sistema', (t) async {
+      bool? guardado;
+      await t.pumpWidget(MaterialApp(
+        home: PermisosScreen(
+          ubicacion: servicio,
+          siguiente: (_) => const Scaffold(body: Text('PANTALLA PRINCIPAL')),
+          leerConsentimiento: () async => null,
+          guardarConsentimiento: (v) async => guardado = v,
+        ),
+      ));
+      await t.pumpAndSettle();
+      expect(find.text('¿Usar la ubicación del teléfono?'), findsOneWidget);
+      expect(find.textContaining('Open-Meteo'), findsOneWidget);
+      expect(plataforma.llamadasPedir, 0, reason: 'no se pidió el permiso del sistema todavía');
+
+      await t.tap(find.text('Sí, usar mi ubicación'));
+      await t.pumpAndSettle(const Duration(seconds: 2));
+      expect(guardado, isTrue);
+      expect(find.text('PANTALLA PRINCIPAL'), findsOneWidget);
+    });
+
+    testWidgets('si dice "No, ahora no": se guarda, NO se pide el permiso y la app sigue', (t) async {
+      plataforma.permisoActual = LocationPermission.denied;
+      bool? guardado;
+      await t.pumpWidget(MaterialApp(
+        home: PermisosScreen(
+          ubicacion: servicio,
+          siguiente: (_) => const Scaffold(body: Text('PANTALLA PRINCIPAL')),
+          leerConsentimiento: () async => null,
+          guardarConsentimiento: (v) async => guardado = v,
+        ),
+      ));
+      await t.pumpAndSettle();
+      await t.tap(find.text('No, ahora no'));
+      await t.pumpAndSettle();
+      expect(guardado, isFalse);
+      expect(plataforma.llamadasPedir, 0);
+      expect(find.text('PANTALLA PRINCIPAL'), findsOneWidget);
+    });
+
+    testWidgets('si ya había dicho que no: no se le insiste', (t) async {
+      await t.pumpWidget(MaterialApp(
+        home: PermisosScreen(
+          ubicacion: servicio,
+          siguiente: (_) => const Scaffold(body: Text('PANTALLA PRINCIPAL')),
+          leerConsentimiento: () async => false,
+        ),
+      ));
+      await t.pumpAndSettle();
+      expect(find.text('¿Usar la ubicación del teléfono?'), findsNothing);
+      expect(find.text('PANTALLA PRINCIPAL'), findsOneWidget);
+    });
+  });
+
+  group('LocationService y la autorización del productor', () {
+    for (final c in <bool?>[null, false]) {
+      test('consentimiento $c: lanza el aviso y NO toca el permiso del sistema ni el GPS', () async {
+        final pl = _Falsa();
+        final s = LocationService(plataforma: pl, consentimiento: () async => c);
+        await expectLater(
+          s.obtener(),
+          throwsA(isA<UbicacionException>().having((e) => e.faltaConsentimiento, 'faltaConsentimiento', isTrue)),
+        );
+        expect(pl.llamadasPedir, 0);
+        expect(pl.llamadasPosicion, 0);
+      });
+    }
   });
 }

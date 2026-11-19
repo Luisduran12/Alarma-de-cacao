@@ -79,9 +79,10 @@ Future<void> _resolverLugaresPendientes() async {
 /// Solo se pide la ubicación MIENTRAS SE USA la app (para el clima y para
 /// marcar el punto de secado). La ubicación en segundo plano no se necesita
 /// y Google Play rechaza apps que la piden sin justificación.
+/// La ubicación NO se pide aquí: se pide en PermisosScreen, después de explicarla y de que el productor acepte.
 Future<void> _solicitarPermisos() async {
   if (Platform.isAndroid || Platform.isIOS) {
-    await [Permission.notification, Permission.locationWhenInUse].request();
+    await Permission.notification.request();
   }
 }
 

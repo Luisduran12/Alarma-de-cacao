@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:alarmacacao5_0/services/consentimiento_ubicacion.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
 import 'home_screen.dart';
 
@@ -10,7 +11,11 @@ class PermisosScreen extends StatefulWidget {
   /// Pantalla a la que se pasa después (por defecto, la principal).
   final WidgetBuilder? siguiente;
 
-  const PermisosScreen({super.key, this.ubicacion, this.siguiente});
+  /// Se pueden cambiar en pruebas: leer y guardar la autorización del productor.
+  final Future<bool?> Function()? leerConsentimiento;
+  final Future<void> Function(bool)? guardarConsentimiento;
+
+  const PermisosScreen({super.key, this.ubicacion, this.siguiente, this.leerConsentimiento, this.guardarConsentimiento});
 
   @override
   State<PermisosScreen> createState() => _PermisosScreenState();
@@ -18,13 +23,43 @@ class PermisosScreen extends StatefulWidget {
 
 class _PermisosScreenState extends State<PermisosScreen> {
   bool _isLoading = false;
+  bool _preguntando = false;
   String? _mensaje;
   bool _errorEsDePermiso = false;
 
   @override
   void initState() {
     super.initState();
-    _probarPermisos();
+    _empezar();
+  }
+
+  /// Ley 1581 de 2012: primero se explica y se pide autorización; el permiso del sistema solo se pide
+  /// si el productor aceptó. Si ya había dicho que no, no se le insiste: entra directo (puede cambiarlo en Ajustes).
+  Future<void> _empezar() async {
+    setState(() => _isLoading = true);
+    final acepto = await (widget.leerConsentimiento ?? ConsentimientoUbicacion.obtener)();
+    if (!mounted) return;
+    if (acepto == null) {
+      setState(() {
+        _isLoading = false;
+        _preguntando = true;
+      });
+    } else if (acepto) {
+      await _probarPermisos();
+    } else {
+      _continuar();
+    }
+  }
+
+  Future<void> _responder(bool acepta) async {
+    await (widget.guardarConsentimiento ?? ConsentimientoUbicacion.registrar)(acepta);
+    if (!mounted) return;
+    setState(() => _preguntando = false);
+    if (acepta) {
+      await _probarPermisos();
+    } else {
+      _continuar();
+    }
   }
 
   Future<void> _probarPermisos() async {
@@ -68,8 +103,44 @@ class _PermisosScreenState extends State<PermisosScreen> {
     );
   }
 
+  Widget _pregunta() {
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(ConsentimientoUbicacion.titulo, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 12),
+                  Text(ConsentimientoUbicacion.texto, style: Theme.of(context).textTheme.bodyLarge),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FilledButton(onPressed: () => _responder(true), child: const Text('Sí, usar mi ubicación')),
+                const SizedBox(height: 8),
+                OutlinedButton(onPressed: () => _responder(false), child: const Text('No, ahora no')),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_preguntando) {
+      return Scaffold(appBar: AppBar(title: const Text('Su ubicación')), body: _pregunta());
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Permisos de Ubicación')),
       body: Center(

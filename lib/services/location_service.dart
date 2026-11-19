@@ -1,5 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 
+import 'consentimiento_ubicacion.dart';
+
 /// Una ubicación GPS ya obtenida. No necesita internet: el GPS del teléfono
 /// funciona sin señal de datos.
 class UbicacionObtenida {
@@ -42,7 +44,10 @@ class UbicacionException implements Exception {
 
   /// true si la solución es que el usuario cambie un permiso en los ajustes.
   final bool abrirAjustes;
-  const UbicacionException(this.mensaje, {this.abrirAjustes = false});
+
+  /// true si falta la autorización del productor dentro de la app (Ley 1581), no el permiso de Android.
+  final bool faltaConsentimiento;
+  const UbicacionException(this.mensaje, {this.abrirAjustes = false, this.faltaConsentimiento = false});
 
   @override
   String toString() => mensaje;
@@ -91,13 +96,27 @@ class LocationService {
   final PlataformaUbicacion _plataforma;
   final Duration espera;
 
-  LocationService({PlataformaUbicacion? plataforma, this.espera = esperaPorDefecto})
-      : _plataforma = plataforma ?? const _PlataformaGeolocator();
+  /// Si el productor autorizó usar la ubicación (true), la rechazó (false) o aún no se le pregunta (null).
+  final Future<bool?> Function() _consentimiento;
+
+  LocationService({
+    PlataformaUbicacion? plataforma,
+    this.espera = esperaPorDefecto,
+    Future<bool?> Function()? consentimiento,
+  })  : _plataforma = plataforma ?? const _PlataformaGeolocator(),
+        _consentimiento = consentimiento ?? ConsentimientoUbicacion.obtener;
 
   /// Comprueba que el GPS esté encendido y que haya permiso; lo pide si hace falta.
   /// Lanza [UbicacionException] si no se puede. NO espera ninguna posición, así que
   /// es rápido y sirve para la pantalla de permisos del arranque.
   Future<void> asegurarPermiso() async {
+    // Primero la autorización del productor: sin ella ni siquiera se le pide el permiso al sistema.
+    if (await _consentimiento() != true) {
+      throw const UbicacionException(
+        'Falta su autorización para usar la ubicación. Puede darla en Ajustes > Privacidad.',
+        faltaConsentimiento: true,
+      );
+    }
     if (!await _plataforma.servicioActivado()) {
       throw const UbicacionException('El GPS está apagado. Enciéndalo en los ajustes del teléfono.');
     }

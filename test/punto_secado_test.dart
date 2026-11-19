@@ -86,7 +86,7 @@ void main() {
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => ConfirmarVolteadaScreen(
                 loteId: 'L1', volteadaId: 'V1', loteService: servicio,
-                ubicacion: LocationService(plataforma: gps),
+                ubicacion: LocationService(plataforma: gps, consentimiento: () async => true),
                 lugarService: LugarService(
                   database: () async => db,
                   urlServidor: '',

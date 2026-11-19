@@ -66,7 +66,7 @@ void main() {
     await t.pumpWidget(MaterialApp(
       home: ClimaScreen(
         clima: clima ?? servicio(),
-        ubicacion: LocationService(plataforma: gps),
+        ubicacion: LocationService(plataforma: gps, consentimiento: () async => true),
         lugarService: _LugarFalso(),
         abrirEnlace: (u) async {
           enlaces.add(u);
