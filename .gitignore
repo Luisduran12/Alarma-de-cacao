@@ -54,3 +54,25 @@ key.properties
 
 # Informe de cobertura (flutter test --coverage)
 coverage/
+
+# ---- Endurecimiento (nada de esto debe subirse nunca) ----
+# Certificados, claves y almacenes de firma
+*.pem
+*.p12
+*.pfx
+# Paquetes compilados y respaldos
+*.apk
+*.aab
+*.bundle
+respaldo-cacao/
+respaldos/
+# Bases de datos locales (pueden contener datos de productores)
+*.db
+*.sqlite
+*.sqlite3
+# Dependencias y compilados en cualquier carpeta
+node_modules/
+build/
+# Conservar los ejemplos sin valores
+!key.properties.ejemplo
+!.env.example
