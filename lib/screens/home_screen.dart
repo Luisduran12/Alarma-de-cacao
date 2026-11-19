@@ -13,6 +13,7 @@ import 'package:alarmacacao5_0/services/lote_service.dart';
 import 'package:alarmacacao5_0/services/notification_ids.dart';
 import 'package:alarmacacao5_0/services/notification_service.dart';
 import 'package:alarmacacao5_0/services/plantillas.dart';
+import 'package:alarmacacao5_0/services/preferencias_app.dart';
 import 'package:alarmacacao5_0/widgets/timer_progress_bar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -47,6 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _inicializarVideo() async {
+    // El video de fondo gasta batería y memoria: con el ahorro de batería se deja el fondo quieto.
+    if (PreferenciasApp.instancia.ahorroBateria) return;
     final controller = VideoPlayerController.asset('assets/videos/background_video.mp4');
     try {
       await controller.initialize();

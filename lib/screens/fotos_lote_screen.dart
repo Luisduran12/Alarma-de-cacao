@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+
+import 'package:alarmacacao5_0/services/preferencias_app.dart';
 import 'package:intl/intl.dart';
 
 import '../models/analisis_foto.dart';
@@ -45,7 +47,8 @@ class _FotosLoteScreenState extends State<FotosLoteScreen> {
 
   Future<void> _iniciar() async {
     await _recargar();
-    if (_pendientes > 0) await _reintentar();
+    // Con el ahorro de batería no se reintenta solo: queda el botón "Reintentar ahora".
+    if (_pendientes > 0 && !PreferenciasApp.instancia.ahorroBateria) await _reintentar();
     await _servicio.limpiarHuerfanas();
   }
 

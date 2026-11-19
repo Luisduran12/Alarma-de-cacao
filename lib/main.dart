@@ -35,7 +35,8 @@ void main() async {
 
   // Si hay señal y un servidor configurado, se resuelven los nombres de lugar
   // que faltan (sin servidor no hace nada: la lista offline basta).
-  unawaited(_resolverLugaresPendientes());
+  // Con el ahorro de batería no se hace por su cuenta.
+  if (!PreferenciasApp.instancia.ahorroBateria) unawaited(_resolverLugaresPendientes());
 
   // Si la app se abrió tocando una notificación con la app cerrada,
   // se abre el formulario de esa volteada cuando el Navigator esté listo.
