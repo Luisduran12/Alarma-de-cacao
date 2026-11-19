@@ -1,0 +1,26 @@
+# Configuración de gitleaks para este repositorio (versión fijada en .github/workflows/ci.yml).
+# Sintaxis según el README oficial de gitleaks: [extend] useDefault y [[allowlists]] (vigente desde v8.25.0).
+title = "Cacao Light"
+
+[extend]
+# Reglas por defecto de gitleaks + las excepciones documentadas de abajo.
+useDefault = true
+
+# --- Excepción 1: textos de prueba FALSOS del servidor --------------------------------------------------------------
+# Los tests de backend/test/ meten a propósito textos con forma de clave ("sk-ant-SECRETO-123", "TOKEN-SECRETO",
+# "CLAVE-FALSA-SECRETO-123") para comprobar que el servidor NUNCA los devuelve ni los registra. No son claves reales.
+# La excepción exige las DOS cosas (condition = "AND"): que el archivo esté en backend/test/ y que el texto sea uno de
+# esos falsos. Cualquier otra cosa parecida a una clave, o la misma cadena fuera de backend/test/, sigue fallando.
+[[allowlists]]
+description = "Textos de prueba falsos de backend/test (no son claves)"
+condition = "AND"
+paths = ['''^backend/test/''']
+regexes = ['''sk-ant-SECRETO-123''', '''CLAVE-FALSA-SECRETO-123''', '''TOKEN-SECRETO''']
+
+# --- Excepción 2: la clave antigua de OpenWeatherMap, ya pública en el historial ------------------------------------
+# Está en el primer commit de main y en el que la quitó. NO se puede borrar del historial sin reescribirlo, y ya fue
+# publicada: la solución real es REVOCARLA en OpenWeatherMap (ver SECURITY.md). Se ignoran solo esos dos commits para que
+# el análisis no falle para siempre por algo conocido; cualquier otro commit con una clave sigue fallando.
+[[allowlists]]
+description = "Clave antigua de OpenWeatherMap (cb55257 y b7bfd72): conocida, pública y pendiente de revocar"
+commits = ["cb55257e49bbbb2b9c9f67d3c860f9ff3f6e2a55", "b7bfd7282719951c9349c1cfbc9ed1ab1a6443bf"]

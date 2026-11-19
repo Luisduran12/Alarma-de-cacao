@@ -1,21 +1,50 @@
-# Revisión automática en cada push y en cada pull request.
-# Aún no se ha ejecutado en GitHub: se escribió y se probó solo en local (los mismos comandos).
+# Revisión automática en cada push y en cada pull request: app, servidor y búsqueda de secretos.
+# Las acciones de terceros están fijadas por HASH de commit (el comentario dice a qué versión corresponde).
+# Aún no se ha ejecutado en GitHub: sus comandos se probaron en local, salvo gitleaks (ver el trabajo "secretos").
 name: CI
 
 on:
   push:
   pull_request:
 
+# Permisos mínimos: solo leer el código. Ningún trabajo necesita escribir ni usar el token para otra cosa.
 permissions:
   contents: read
 
 jobs:
+  secretos:
+    name: Revisión de secretos (gitleaks)
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: "8.30.1"
+      # SHA-256 de gitleaks_8.30.1_linux_x64.tar.gz según la API de GitHub Releases (digest del asset, 2026-11-18).
+      GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # historial completo: la revisión también mira commits anteriores
+          persist-credentials: false
+      - name: Instalar gitleaks (versión fijada y suma verificada)
+        run: |
+          set -euo pipefail
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/gitleaks"
+          tar -xzf gitleaks.tar.gz -C "$RUNNER_TEMP/gitleaks" gitleaks
+          rm gitleaks.tar.gz
+      - name: Buscar claves en todo el historial (falla si encuentra una)
+        # --redact oculta el valor en el registro; el código de salida 1 (por defecto) hace fallar el trabajo.
+        run: '"$RUNNER_TEMP/gitleaks/gitleaks" git --config .gitleaks.toml --redact --verbose .'
+
   app:
     name: App Flutter (analyze y test)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           flutter-version: 3.38.9
@@ -29,14 +58,16 @@ jobs:
           awk -F: '/^LF:/{t+=$2} /^LH:/{h+=$2} END{printf "Cobertura de líneas: %.1f %% (%d de %d)\n", 100*h/t, h, t}' coverage/lcov.info
 
   backend:
-    name: Servidor (typecheck y test)
+    name: Servidor (typecheck, test y audit)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
