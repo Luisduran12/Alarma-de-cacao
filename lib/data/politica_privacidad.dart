@@ -44,7 +44,8 @@ class PoliticaPrivacidad {
       'Nuestro servidor no guarda sus preguntas, sus fotos ni sus resultados. Solo anota códigos y números '
           '(por ejemplo, "consulta correcta" y su costo). El código de la instalación y la dirección de internet '
           'de la conexión se mezclan con un secreto del servidor antes de contar las consultas, así que no quedan '
-          'guardados tal cual.',
+          'guardados tal cual. La única excepción: para no repetir consultas, guarda hasta 30 días el nombre de un lugar '
+          'junto a un punto del mapa redondeado a unos 100 m. Ese dato no está unido a usted ni a su instalación.',
     ),
     SeccionPolitica(
       'Anthropic puede conservar lo que recibe hasta 30 días',

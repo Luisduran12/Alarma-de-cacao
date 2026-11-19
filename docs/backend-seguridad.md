@@ -103,3 +103,47 @@ defensa es el tope de gasto.
 - La IA puede equivocarse. Las respuestas del chat y de las fotos llevan siempre el aviso de
   que son una guía; los porcentajes de las fotos son estimaciones y su exactitud real **no
   está medida** (es la Fase 6B).
+
+## Revisión de seguridad del servidor (2026-11-18)
+
+Revisión del código de `backend/` línea por línea. **No se ejecutó contra servicios reales ni se desplegó nada.**
+
+### Lo que se comprobó y está bien
+- **Entradas y tamaños:** esquemas `zod` estrictos (`.strict()`, rechazan campos extra), tope de cuerpo por ruta
+  (24 KB chat, 2,6 MB foto, 1 KB lugar) aplicado *mientras se lee*, JPEG validado marcador por marcador (recorrido
+  lineal, sin decodificar), coordenadas solo de Colombia. Los errores de validación no devuelven el texto del usuario.
+- **Registro sin datos:** `registro.ts` solo deja pasar 8 claves y valores con forma de código; un ID, una IP, una
+  pregunta o unas coordenadas que se colaran por error se descartan. El ID y la IP se anonimizan con HMAC y un secreto
+  del servidor antes de contarse.
+- **Límites:** por IP y hora, por instalación y día, y tope de gasto diario de todo el servidor; se cuentan los intentos
+  fallidos también; `BLOQUEO_TOTAL=1` corta chat y fotos (y `LUGAR_DESACTIVADO=1` corta lugar).
+- **SSRF:** ninguna ruta hace una petición a una dirección que venga del usuario. Los destinos son fijos: Nominatim
+  (la URL se arma con coordenadas numéricas redondeadas), Anthropic (el SDK) y Upstash (de una variable de entorno, que
+  debe empezar por `https://`).
+- **Inyección de instrucciones:** el texto del usuario va entre etiquetas con `<` y `>` neutralizados y el prompt dice
+  que es información, no órdenes (mitigación, no garantía: ver "Riesgos conocidos").
+- **Dependencias:** `npm audit` sin vulnerabilidades (0).
+
+### Hallazgos corregidos (con pruebas en `backend/test/`)
+
+| # | Hallazgo | Riesgo | Corrección |
+|---|---|---|---|
+| 1 | En **preview** de Vercel (URL pública que puede heredar `ANTHROPIC_API_KEY`) el servidor usaba el secreto de desarrollo —que es público— y un almacén **en memoria**, que en serverless no cuenta nada entre instancias: sin límite real de gasto. | Medio | `esEntornoDesplegado()` (`config.ts`): producción, preview y `NODE_ENV=production` fallan cerrado (sin secreto o sin Upstash, se rechaza todo). Solo el desarrollo local usa el modo de desarrollo. |
+| 2 | Una excepción imprevista dependía del manejo por defecto de la plataforma. | Bajo | `envolverSeguro()` envuelve las 3 rutas: error 500 genérico, sin mensaje ni traza; solo se anota un código. |
+| 3 | El texto libre que la IA devuelve en las fotos (`posibles_causas`, `pasos_recomendados`) podía traer un enlace o un teléfono copiado de un cartel dentro de la foto. | Bajo-medio | El prompt lo prohíbe y `validarResultado` descarta las frases con enlaces, correos, usuarios o teléfonos (sin tocar cifras técnicas normales). |
+| 4 | `vercel.json` no declaraba cabeceras de seguridad. | Bajo | Cabeceras `X-Content-Type-Options`, `Cache-Control: no-store`, `X-Frame-Options`, `Referrer-Policy`, `Content-Security-Policy`, `Cross-Origin-Resource-Policy`, `Strict-Transport-Security` y `Permissions-Policy`. **CORS restringido por no abrirlo:** no hay ninguna cabecera `Access-Control-Allow-*` (la app móvil no es un navegador); una prueba lo comprueba. |
+| 5 | El servidor **guarda en Upstash, 30 días, el nombre del lugar de cada punto redondeado (~110 m)** (caché de `/lugar`), y la política de privacidad decía que no guardaba nada. | Transparencia | La política de la app y `docs/privacidad.md` ahora lo dicen (sin relación con la persona ni con el ID). |
+
+### Pendientes (no se cambiaron: más riesgo o necesitan decisión)
+1. **El tope de gasto no es atómico:** se consulta antes de llamar a la IA y se suma después; muchas peticiones
+   simultáneas pueden pasarse un poco del tope (acotado por tokens máximos × concurrencia). Solución posible: reservar
+   un gasto estimado antes de llamar.
+2. **La IP sale de `x-real-ip`.** En Vercel la pone la plataforma; si el servidor se mudara a otro proveedor, hay que
+   revisar que no la pueda falsear el cliente. Si faltaran ambas cabeceras, todos comparten una cubeta llamada
+   `desconocida`.
+3. **El ID de instalación lo genera la app:** no es autenticación. Play Integrity sigue sin implementarse (arriba).
+4. **Inyección de instrucciones en el chat:** la respuesta del chat no se filtra en busca de enlaces (solo la de fotos);
+   la pregunta es del propio usuario y el daño está acotado.
+5. **Nada probado contra servicios reales** (Anthropic, Upstash, Vercel) ni prueba de penetración.
+6. `/lugar` guarda coordenadas redondeadas aunque la IA no esté involucrada: si se quiere cero retención, hay que quitar
+   la caché (más llamadas a Nominatim, que limita a 1 por segundo).
