@@ -1,0 +1,20 @@
+# Revisión semanal de dependencias (Flutter, servidor y acciones de GitHub).
+# Sintaxis y valores verificados en la documentación oficial de Dependabot (opciones de configuración).
+version: 2
+updates:
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
