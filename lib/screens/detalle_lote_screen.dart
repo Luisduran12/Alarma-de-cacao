@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
+import 'package:alarmacacao5_0/widgets/boton_dictado.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -415,9 +416,10 @@ class _DetalleLoteScreenState extends State<DetalleLoteScreen> {
               TextField(
                 controller: obsCtrl,
                 maxLines: 3,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Observación del resultado',
                   hintText: 'Prueba de corte, color, aroma, % de granos violetas…',
+                  suffixIcon: BotonDictado(controller: obsCtrl),
                 ),
               ),
             ],

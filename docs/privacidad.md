@@ -12,6 +12,7 @@ Sus lotes y registros (temperatura, humedad, pH, Brix, observaciones), las coord
 • Nombre del lugar: con internet, la ubicación (redondeada a unos 100 m) va a nuestro servidor, que consulta OpenStreetMap.
 • Chat con la IA: su pregunta, la etapa del lote, las horas y hasta los 8 últimos registros (sin el nombre del lote y sin ubicación) van a nuestro servidor y de ahí a Anthropic.
 • Foto con la IA: la foto, reducida y sin datos ocultos (ubicación, modelo del teléfono), va a nuestro servidor y de ahí a Anthropic.
+• Dictado por voz (opcional): lo escucha el servicio de voz de su teléfono, que según el teléfono puede enviar el audio por internet a su proveedor. Esta app no guarda el audio, solo el texto que usted deje.
 • Un código anónimo de la instalación, sin relación con su nombre, para limitar cuántas consultas se hacen por día.
 Nada de esto se envía si usted no usa esas funciones. Sin internet, la app sigue sirviendo.
 

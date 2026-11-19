@@ -7,6 +7,7 @@ import 'package:alarmacacao5_0/models/volteada.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
 import 'package:alarmacacao5_0/services/lugar_service.dart';
+import 'package:alarmacacao5_0/widgets/boton_dictado.dart';
 import 'package:alarmacacao5_0/widgets/lugar_texto.dart';
 import 'package:alarmacacao5_0/services/notification_ids.dart';
 import 'package:alarmacacao5_0/services/notification_service.dart';
@@ -351,10 +352,11 @@ class _ConfirmarVolteadaScreenState extends State<ConfirmarVolteadaScreen> {
                       TextFormField(
                         controller: _observacionController,
                         maxLines: 3,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Observación',
                           hintText: 'Olor, color, aspecto del grano…',
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: BotonDictado(controller: _observacionController),
                         ),
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? 'Ingrese una observación' : null,
