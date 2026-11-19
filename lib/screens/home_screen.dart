@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:alarmacacao5_0/models/lote.dart';
+import 'package:alarmacacao5_0/screens/ajustes_screen.dart';
 import 'package:alarmacacao5_0/screens/clima_screen.dart';
 import 'package:alarmacacao5_0/screens/comparacion_lotes_screen.dart';
 import 'package:alarmacacao5_0/screens/detalle_lote_screen.dart';
@@ -171,6 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(widget.title),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
+          IconButton(
+            tooltip: 'Ajustes',
+            icon: const Icon(Icons.settings),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AjustesScreen())),
+          ),
           IconButton(
             tooltip: 'Probar alarma (10 s)',
             icon: const Icon(Icons.notifications_active_outlined),
