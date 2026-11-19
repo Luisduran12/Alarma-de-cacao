@@ -1,3 +1,4 @@
+import { esEntornoDesplegado } from "./config.js";
 /**
  * Almacén de contadores, cerrojos y caché. En producción es Upstash Redis (por su API
  * REST, sin dependencias); en pruebas y desarrollo, memoria.
@@ -141,6 +142,7 @@ export function crearAlmacenDesdeEntorno(
   const url = env.UPSTASH_REDIS_REST_URL ?? env.KV_REST_API_URL;
   const token = env.UPSTASH_REDIS_REST_TOKEN ?? env.KV_REST_API_TOKEN;
   if (url && token && url.startsWith("https://")) return new UpstashAlmacen(url.replace(/\/+$/, ""), token, fetchFn);
-  if (env.VERCEL_ENV === "production") return null;
+  // Desplegado (producción o preview) sin Upstash: NO se usa la memoria (en serverless no cuenta nada entre instancias).
+  if (esEntornoDesplegado(env)) return null;
   return (memoriaDeDesarrollo ??= new MemoriaAlmacen());
 }

@@ -68,9 +68,19 @@ function texto(valor: string | undefined): string | undefined {
   return t ? t : undefined;
 }
 
+/**
+ * ¿Es un entorno DESPLEGADO (donde la clave de la IA puede estar puesta y la URL es pública)? Producción Y "preview" de
+ * Vercel (las vistas previas también tienen URL pública y pueden heredar la clave), o cualquier proceso con
+ * NODE_ENV=production. Ahí NO se acepta el secreto ni el almacén de desarrollo: si falta algo, se rechaza todo.
+ * Solo se permite el modo de desarrollo en local (`vercel dev`, `npm test`), sin ninguna de esas marcas.
+ */
+export function esEntornoDesplegado(env: Record<string, string | undefined>): boolean {
+  return env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview" || env.NODE_ENV === "production";
+}
+
 export function cargarConfig(env: Record<string, string | undefined> = process.env): Config {
   return {
-    produccion: env.VERCEL_ENV === "production",
+    produccion: esEntornoDesplegado(env),
     modeloChat: texto(env.MODELO_CHAT) ?? POR_DEFECTO.modeloChat,
     modeloFoto: texto(env.MODELO_FOTO) ?? POR_DEFECTO.modeloFoto,
     limites: {

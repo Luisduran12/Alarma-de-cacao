@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { cargarConfig, pepperEfectivo, POR_DEFECTO } from "../src/config.js";
-import { errorHttp, ipDe, leerJson, limpiarTexto, respuestaJson } from "../src/http.js";
+import { describe, expect, it, vi } from "vitest";
+import { cargarConfig, esEntornoDesplegado, pepperEfectivo, POR_DEFECTO } from "../src/config.js";
+import { crearAlmacenDesdeEntorno } from "../src/almacen.js";
+import { readFileSync } from "node:fs";
+import { envolverSeguro, errorHttp, ipDe, leerJson, limpiarTexto, respuestaJson } from "../src/http.js";
 import { limpiarCampos, registrar } from "../src/registro.js";
 
 describe("cargarConfig", () => {
@@ -170,5 +172,85 @@ describe("registro sin datos personales", () => {
     const lineas: string[] = [];
     registrar("info", "Evento con Datos Personales", {}, (l) => lineas.push(l));
     expect(JSON.parse(lineas[0]!).evento).toBe("evento_invalido");
+  });
+});
+
+describe("entorno desplegado: producción Y preview fallan cerrado", () => {
+  it("producción, preview y NODE_ENV=production son entornos desplegados; el desarrollo local no", () => {
+    expect(esEntornoDesplegado({ VERCEL_ENV: "production" })).toBe(true);
+    expect(esEntornoDesplegado({ VERCEL_ENV: "preview" })).toBe(true);
+    expect(esEntornoDesplegado({ NODE_ENV: "production" })).toBe(true);
+    expect(esEntornoDesplegado({ VERCEL_ENV: "development" })).toBe(false);
+    expect(esEntornoDesplegado({})).toBe(false);
+  });
+
+  it("en preview sin ID_PEPPER NO se usa el secreto de desarrollo (que es público): se rechaza todo", () => {
+    expect(pepperEfectivo(cargarConfig({ VERCEL_ENV: "preview" }))).toBeNull();
+    expect(pepperEfectivo(cargarConfig({ NODE_ENV: "production" }))).toBeNull();
+    expect(pepperEfectivo(cargarConfig({ VERCEL_ENV: "development" }))).not.toBeNull();
+  });
+
+  it("en preview o con NODE_ENV=production sin Upstash NO hay almacén en memoria (no contaría nada entre instancias)", () => {
+    expect(crearAlmacenDesdeEntorno({ VERCEL_ENV: "preview" })).toBeNull();
+    expect(crearAlmacenDesdeEntorno({ NODE_ENV: "production" })).toBeNull();
+    expect(crearAlmacenDesdeEntorno({ VERCEL_ENV: "development" })).not.toBeNull();
+  });
+});
+
+describe("envolverSeguro: una excepción imprevista nunca filtra información", () => {
+  it("responde 500 genérico sin mensaje, traza ni datos, y registra solo un código", async () => {
+    const lineas: string[] = [];
+    const espia = vi.spyOn(console, "error").mockImplementation((l: string) => void lineas.push(l));
+    const h = envolverSeguro(async () => {
+      throw new Error("clave sk-ant-SECRETO-123 en /ruta/secreta/archivo.ts con la pregunta del productor");
+    }, "chat");
+    const r = await h(new Request("https://api.example/x", { method: "POST" }));
+    espia.mockRestore();
+    expect(r.status).toBe(500);
+    const cuerpo = await r.text();
+    expect(JSON.parse(cuerpo).error.codigo).toBe("error_interno");
+    for (const t of [cuerpo, lineas.join("\n")]) {
+      expect(t).not.toContain("SECRETO");
+      expect(t).not.toContain("/ruta/secreta");
+      expect(t).not.toContain("productor");
+      expect(t).not.toContain("at ");
+    }
+    expect(lineas.join("")).toContain("excepcion_no_controlada");
+  });
+
+  it("también atrapa una excepción síncrona (por ejemplo, al armar las dependencias)", async () => {
+    const h = envolverSeguro(() => {
+      throw new Error("falló al construir");
+    }, "lugar");
+    expect((await h(new Request("https://api.example/x", { method: "POST" }))).status).toBe(500);
+  });
+
+  it("deja pasar las respuestas normales sin tocarlas", async () => {
+    const h = envolverSeguro(async () => respuestaJson({ ok: 1 }, 200), "chat");
+    const r = await h(new Request("https://api.example/x"));
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ ok: 1 });
+  });
+});
+
+describe("vercel.json: cabeceras de seguridad y CORS restringido", () => {
+  const cfg = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8")) as {
+    headers: Array<{ source: string; headers: Array<{ key: string; value: string }> }>;
+  };
+  const todas = Object.fromEntries(cfg.headers.flatMap((h) => h.headers.map((x) => [x.key.toLowerCase(), x.value])));
+
+  it("cubre todas las rutas con las cabeceras esperadas", () => {
+    expect(cfg.headers.map((h) => h.source)).toEqual(["/(.*)"]);
+    expect(todas["x-content-type-options"]).toBe("nosniff");
+    expect(todas["cache-control"]).toBe("no-store");
+    expect(todas["x-frame-options"]).toBe("DENY");
+    expect(todas["referrer-policy"]).toBe("no-referrer");
+    expect(todas["content-security-policy"]).toContain("default-src 'none'");
+    expect(todas["strict-transport-security"]).toContain("max-age=");
+    expect(todas["cross-origin-resource-policy"]).toBe("same-origin");
+  });
+
+  it("NO abre CORS: ninguna cabecera Access-Control-Allow-* (la app móvil no es un navegador y no lo necesita)", () => {
+    expect(Object.keys(todas).filter((k) => k.startsWith("access-control-"))).toEqual([]);
   });
 });

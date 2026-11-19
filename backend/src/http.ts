@@ -1,4 +1,5 @@
-/** Utilidades de respuesta y lectura de peticiones. Sin dependencias. */
+/** Utilidades de respuesta y lectura de peticiones. */
+import { registrar } from "./registro.js";
 
 const CABECERAS_BASE = {
   // Nada de lo que responde este servidor debe guardarse en cachés intermedias.
@@ -81,4 +82,19 @@ export function limpiarTexto(t: string): string {
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
     .replace(/[<>]/g, "‹")
     .trim();
+}
+
+/**
+ * Red de seguridad de TODO endpoint: si algo lanza una excepción que nadie previó, se responde un error genérico
+ * (sin mensaje, sin traza, sin datos de la petición) y solo se anota un código. Así nunca se filtra información interna.
+ */
+export function envolverSeguro(manejador: (request: Request) => Promise<Response>, endpoint: string): (request: Request) => Promise<Response> {
+  return async (request) => {
+    try {
+      return await manejador(request);
+    } catch {
+      registrar("error", "excepcion_no_controlada", { endpoint, codigo: "excepcion", estado: 500 });
+      return errorHttp(500, "error_interno", "Algo salió mal. Intente más tarde.");
+    }
+  };
 }

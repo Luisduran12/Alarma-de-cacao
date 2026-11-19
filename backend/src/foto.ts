@@ -80,7 +80,16 @@ const MENSAJES_REPETIR: Record<MotivoFoto, string> = {
   otro: "No se pudo analizar la foto. Tome otra, con buena luz y bien enfocada.",
 };
 
-const limpiarLista = (l: string[]) => l.map((t) => t.trim().slice(0, 300)).filter(Boolean).slice(0, 5);
+/**
+ * Enlaces, correos, usuarios (@...) y teléfonos. El texto libre de la IA sale de mirar una foto, y una foto puede traer
+ * texto escrito (un cartel, un papel) con instrucciones: aunque la IA lo repitiera, NUNCA le llega al productor un
+ * enlace ni un contacto. Las frases que los traen se descartan enteras.
+ */
+export const ENLACE_O_CONTACTO =
+  /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|co|net|org|io|app|me|ly|info|xyz)\b|[\w.+-]+@[\w-]+\.[\w.]+|(^|\s)@[\w.]{3,}|\bwa\.me\b|\bt\.me\b|(\+?57[ -]?)?\b3\d{2}[ -]?\d{3}[ -]?\d{4}\b|\b\d{9,}\b)/i;
+
+const limpiarLista = (l: string[]) =>
+  l.map((t) => t.trim().slice(0, 300)).filter((t) => t && !ENLACE_O_CONTACTO.test(t)).slice(0, 5);
 
 /** null = la respuesta de la IA no es confiable (nombres raros, porcentajes que no cuadran...). */
 export function validarResultado(modo: ModoFoto, r: ResultadoIA): ResultadoFoto | null {
