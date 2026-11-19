@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: ni la copia automática en la nube ni la transferencia entre teléfonos se llevan datos de la app
+     (lotes, registros, ubicaciones, fotos, autorizaciones). Para pasar datos a otro teléfono se usa el archivo de
+     "Guardar copia de seguridad" de Ajustes, que NO incluye fotos ni autorizaciones. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

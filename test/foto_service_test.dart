@@ -40,8 +40,11 @@ void main() {
 
   final foto = FotoPreparada(Uint8List.fromList([0xff, 0xd8, 1, 2, 3, 0xff, 0xd9]), 640, 480);
 
+  bool? autorizado = true;
+
   FotoService servicio({String url = 'https://api.cacaolight.example/v1', Duration? timeout}) => FotoService(
         database: () async => db,
+        consentimiento: () async => autorizado,
         cliente: MockClient((r) {
           peticiones.add(r);
           return responder(r);
@@ -55,6 +58,7 @@ void main() {
       );
 
   setUp(() async {
+    autorizado = true;
     SharedPreferences.setMockInitialValues({});
     db = await CacaoDatabase.abrir(databaseFactoryFfi, inMemoryDatabasePath);
     await db.insert('lotes', Lote(id: 'L1', title: 'Lote privado', status: 'en proceso', createdAt: DateTime(2026)).toRow());
@@ -367,6 +371,36 @@ void main() {
       for (final frase in ['Anthropic', '30 días', 'datos ocultos', 'no guarda la foto', 'Si no acepta']) {
         expect(ConsentimientoFotos.texto, contains(frase), reason: frase);
       }
+    });
+  });
+
+  group('la autorización se revisa AL ENVIAR (también la cola)', () {
+    for (final estado in <bool?>[false, null]) {
+      test('autorización $estado: no sale ninguna petición, la foto sigue guardada y en cola', () async {
+        autorizado = estado;
+        final s = servicio();
+        final g = await s.guardar(loteId: 'L1', modo: ModoAnalisis.corte, foto: foto);
+        await expectLater(s.analizar(g.id), throwsA(isA<FotoException>().having((e) => e.codigo, 'codigo', 'sin_autorizacion')));
+        expect(peticiones, isEmpty);
+        expect((await s.obtener(g.id))!.estado, EstadoAnalisis.pendiente);
+        expect(File(g.ruta).existsSync(), isTrue);
+      });
+    }
+
+    test('si la quita después de encolar, la cola NO se manda (procesarPendientes no envía nada)', () async {
+      final s = servicio();
+      final g1 = await s.guardar(loteId: 'L1', modo: ModoAnalisis.corte, foto: foto);
+      await s.guardar(loteId: 'L1', modo: ModoAnalisis.corte, foto: foto);
+      autorizado = false;
+      expect(await s.procesarPendientes(), 0);
+      expect(peticiones, isEmpty);
+      expect(await s.cuantasPendientes(), 2);
+
+      autorizado = true; // la vuelve a dar: ahora sí sale
+      responder = (_) async => _json(_resp());
+      expect(await s.procesarPendientes(), 2);
+      expect(peticiones, hasLength(2));
+      expect((await s.obtener(g1.id))!.estado, EstadoAnalisis.analizada);
     });
   });
 }

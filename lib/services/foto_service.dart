@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 
 import '../data/cacao_database.dart';
 import '../models/analisis_foto.dart';
+import 'consentimiento_fotos.dart';
 import 'foto_preparada.dart';
 import 'instalacion_id.dart';
 
@@ -41,6 +42,7 @@ class FotoService {
   final Duration _timeout;
   final Future<String> Function() _idInstalacion;
   final Future<Directory> Function() _directorio;
+  final Future<bool?> Function() _consentimiento;
   final DateTime Function() _ahora;
   final String Function() _nuevoId;
 
@@ -51,6 +53,7 @@ class FotoService {
     Duration? timeout,
     Future<String> Function()? idInstalacion,
     Future<Directory> Function()? directorio,
+    Future<bool?> Function()? consentimiento,
     DateTime Function()? ahora,
     String Function()? nuevoId,
   })  : _db = database ?? CacaoDatabase.instancia,
@@ -59,6 +62,7 @@ class FotoService {
         _timeout = timeout ?? const Duration(seconds: 65),
         _idInstalacion = idInstalacion ?? InstalacionId.obtener,
         _directorio = directorio ?? _directorioPorDefecto,
+        _consentimiento = consentimiento ?? ConsentimientoFotos.obtener,
         _ahora = ahora ?? DateTime.now,
         _nuevoId = nuevoId ?? (() => const Uuid().v4());
 
@@ -117,6 +121,12 @@ class FotoService {
     final a = await obtener(id);
     if (a == null) throw ArgumentError('No existe la foto $id');
     if (a.estado == EstadoAnalisis.analizada) return a;
+    // La autorización se revisa AL ENVIAR, no solo al tomar la foto: si el productor la quitó en Ajustes (o nunca la dio),
+    // ninguna foto sale del teléfono, tampoco las que estaban en la cola. La foto queda guardada.
+    if (await _consentimiento() != true) {
+      throw const FotoException('sin_autorizacion', 'No ha autorizado enviar fotos para analizarlas. Puede hacerlo en Ajustes. La foto queda guardada en el teléfono.',
+          reintentable: true);
+    }
     final base = _servidor;
     if (base == null) {
       throw const FotoException('sin_servidor', 'El análisis de fotos no está disponible en esta versión de la app. La foto queda guardada.',

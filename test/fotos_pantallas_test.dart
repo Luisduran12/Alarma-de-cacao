@@ -246,6 +246,7 @@ void main() {
   });
 
   testWidgets('al abrir la lista reintenta solo las fotos pendientes', (t) async {
+    await t.runAsync(() => ConsentimientoFotos.registrar(true));
     final dirFoto = await t.runAsync(() => servicio.guardar(
         loteId: 'L1', modo: ModoAnalisis.corte, foto: PreparadorFoto.prepararSincrono(_jpeg())));
     expect(dirFoto!.estado, EstadoAnalisis.pendiente);
@@ -283,6 +284,7 @@ void main() {
 
   group('resultado', () {
     Future<void> abrirResultado(WidgetTester t, Map<String, Object?> respuesta) async {
+      await t.runAsync(() => ConsentimientoFotos.registrar(true)); // enviar exige la autorización vigente
       final a = await t.runAsync(() async {
         final g = await servicio.guardar(loteId: 'L1', modo: ModoAnalisis.corte, foto: PreparadorFoto.prepararSincrono(_jpeg()));
         responder = (_) async => _json(respuesta);
