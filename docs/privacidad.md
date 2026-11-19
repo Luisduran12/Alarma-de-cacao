@@ -34,8 +34,9 @@ La app es una guía de apoyo y no reemplaza al técnico agropecuario.
 
 ## Responsable del tratamiento
 
-Pendiente: el responsable debe definir su nombre y un medio de contacto en `PoliticaPrivacidad.contactoResponsable`. No se inventó ninguno; mientras esté vacío, la app no muestra línea de contacto.
+Luis Emir Guerrero Duran, proyecto académico de la UNAD (prototipo).
+Contacto: [CORREO_DEL_PROYECTO]
 
 ## Lo que este documento NO es
 
-No es asesoría legal ni fue revisado por un abogado. Antes de publicar la app conviene que lo revise alguien con conocimiento de la Ley 1581 de 2012 (por ejemplo, para saber si hay que registrar la base de datos o definir un procedimiento de consultas y reclamos).
+Esta política no fue revisada por un abogado. Es un prototipo académico. Antes de publicar la app conviene que lo revise alguien con conocimiento de la Ley 1581 de 2012 (por ejemplo, para saber si hay que registrar la base de datos o definir un procedimiento de consultas y reclamos).

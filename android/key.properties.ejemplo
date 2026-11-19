@@ -1,0 +1,6 @@
+# Copie este archivo como android/key.properties y llene los valores EN SU COMPUTADOR.
+# android/key.properties NO se sube a git (está en .gitignore). No escriba contraseñas aquí.
+storePassword=
+keyPassword=
+keyAlias=cacaolight
+storeFile=

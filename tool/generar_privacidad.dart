@@ -16,13 +16,10 @@ void main() {
   }
   b
     ..writeln('## Responsable del tratamiento\n')
-    ..writeln(PoliticaPrivacidad.contactoResponsable.isEmpty
-        ? 'Pendiente: el responsable debe definir su nombre y un medio de contacto en `PoliticaPrivacidad.contactoResponsable`. '
-            'No se inventó ninguno; mientras esté vacío, la app no muestra línea de contacto.\n'
-        : '${PoliticaPrivacidad.contactoResponsable}\n')
+    ..writeln('${PoliticaPrivacidad.responsable}\nContacto: ${PoliticaPrivacidad.contacto}\n')
     ..writeln('## Lo que este documento NO es\n')
-    ..writeln('No es asesoría legal ni fue revisado por un abogado. Antes de publicar la app conviene que lo revise '
-        'alguien con conocimiento de la Ley 1581 de 2012 (por ejemplo, para saber si hay que registrar la base de datos o '
-        'definir un procedimiento de consultas y reclamos).');
+    ..writeln('${PoliticaPrivacidad.avisoLegal} Antes de publicar la app conviene que lo revise alguien con conocimiento '
+        'de la Ley 1581 de 2012 (por ejemplo, para saber si hay que registrar la base de datos o definir un '
+        'procedimiento de consultas y reclamos).');
   File('docs/privacidad.md').writeAsStringSync(b.toString());
 }

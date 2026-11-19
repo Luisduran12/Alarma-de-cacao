@@ -11,8 +11,12 @@ class PoliticaPrivacidad {
 
   static const titulo = 'Política de privacidad';
 
-  /// Quién responde por los datos y cómo contactarlo. Vacío hasta que el responsable lo defina: no se inventa.
-  static const contactoResponsable = '';
+  /// Quién responde por los datos y cómo contactarlo. El correo es un marcador que el autor debe reemplazar.
+  static const responsable = 'Luis Emir Guerrero Duran, proyecto académico de la UNAD (prototipo).';
+  static const contacto = '[CORREO_DEL_PROYECTO]';
+
+  /// Se muestra siempre: la política no ha sido revisada por un abogado.
+  static const avisoLegal = 'Esta política no fue revisada por un abogado. Es un prototipo académico.';
 
   static const secciones = <SeccionPolitica>[
     SeccionPolitica(

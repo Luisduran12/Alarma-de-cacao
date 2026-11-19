@@ -19,11 +19,11 @@ class PoliticaScreen extends StatelessWidget {
             Text(s.texto, style: t.bodyLarge),
             const SizedBox(height: 20),
           ],
-          if (PoliticaPrivacidad.contactoResponsable.isNotEmpty) ...[
-            Semantics(header: true, child: Text('Contacto', style: t.titleMedium)),
-            const SizedBox(height: 6),
-            Text(PoliticaPrivacidad.contactoResponsable, style: t.bodyLarge),
-          ],
+          Semantics(header: true, child: Text('Responsable del tratamiento', style: t.titleMedium)),
+          const SizedBox(height: 6),
+          Text('${PoliticaPrivacidad.responsable}\nContacto: ${PoliticaPrivacidad.contacto}', style: t.bodyLarge),
+          const SizedBox(height: 20),
+          Text(PoliticaPrivacidad.avisoLegal, style: t.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
         ],
       ),
     );
