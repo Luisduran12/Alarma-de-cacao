@@ -8,7 +8,8 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:alarmacacao5_0/services/alarm_scheduler.dart';
 import 'package:alarmacacao5_0/services/lugar_service.dart';
 import 'package:alarmacacao5_0/services/notification_service.dart';
-
+import 'package:alarmacacao5_0/services/preferencias_app.dart';
+import 'package:alarmacacao5_0/tema_app.dart';
 
 // Pantallas
 import 'package:alarmacacao5_0/screens/confirmar_volteada_screen.dart';
@@ -21,10 +22,12 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz_data.initializeTimeZones();
+  await PreferenciasApp.cargar();
 
   await _solicitarPermisos();
   await NotificationService().init(); // Inicializa notificaciones
-  await NotificationService().solicitarPermisos(); // Notificaciones + alarmas exactas
+  await NotificationService()
+      .solicitarPermisos(); // Notificaciones + alarmas exactas
 
   // Red de seguridad: si el sistema perdió alguna alarma (por ejemplo, un ahorrador
   // de batería bloqueó el reinicio de alarmas), se reprograma. No retrasa el arranque.
@@ -52,9 +55,13 @@ void main() async {
 
 Future<void> _reprogramarAlarmasPerdidas() async {
   try {
-    final pendientes = (await NotificationService().getPendingNotifications()).map((p) => p.id).toSet();
+    final pendientes = (await NotificationService().getPendingNotifications())
+        .map((p) => p.id)
+        .toSet();
     final n = await AlarmScheduler().reprogramarFaltantes(pendientes);
-    if (n > 0) debugPrint('🔁 Se reprogramaron $n alarmas que el sistema había perdido');
+    if (n > 0) {
+      debugPrint('🔁 Se reprogramaron $n alarmas que el sistema había perdido');
+    }
   } catch (e) {
     debugPrint('No se pudieron revisar las alarmas pendientes: $e');
   }
@@ -74,10 +81,7 @@ Future<void> _resolverLugaresPendientes() async {
 /// y Google Play rechaza apps que la piden sin justificación.
 Future<void> _solicitarPermisos() async {
   if (Platform.isAndroid || Platform.isIOS) {
-    await [
-      Permission.notification,
-      Permission.locationWhenInUse,
-    ].request();
+    await [Permission.notification, Permission.locationWhenInUse].request();
   }
 }
 
@@ -88,55 +92,62 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Cacao Light 4.0',
-      debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
-        useMaterial3: true,
-      ),
-      home: const PermisosScreen(),
-      onGenerateRoute: (settings) {
-        switch (settings.name) {
-          case '/configurar':
-            return MaterialPageRoute(builder: (_) => const ConfigurarLoteScreen());
-          case '/guia-corte':
-            final args = settings.arguments;
-            if (args is Map && args['loteId'] is String) {
+    final prefs = PreferenciasApp.instancia;
+    return ListenableBuilder(
+      listenable: prefs,
+      builder: (context, _) => MaterialApp(
+        title: 'Cacao Light 4.0',
+        debugShowCheckedModeBanner: false,
+        navigatorKey: navigatorKey,
+        theme: TemaApp.construir(altoContraste: prefs.altoContraste),
+        builder: (context, hijo) =>
+            TemaApp.conPreferencias(context, hijo, prefs),
+        home: const PermisosScreen(),
+        onGenerateRoute: (settings) {
+          switch (settings.name) {
+            case '/configurar':
               return MaterialPageRoute(
-                builder: (_) => GuiaPruebaCorteScreen(
-                  loteId: args['loteId'] as String,
-                  volteadaId: (args['volteadaId'] as String?) ?? '',
-                ),
+                builder: (_) => const ConfigurarLoteScreen(),
               );
-            }
-            return MaterialPageRoute(builder: (_) => const GuiaPruebaCorteScreen());
-          case '/confirmar':
-            final args = settings.arguments;
-            if (args is Map && args['loteId'] is String) {
+            case '/guia-corte':
+              final args = settings.arguments;
+              if (args is Map && args['loteId'] is String) {
+                return MaterialPageRoute(
+                  builder: (_) => GuiaPruebaCorteScreen(
+                    loteId: args['loteId'] as String,
+                    volteadaId: (args['volteadaId'] as String?) ?? '',
+                  ),
+                );
+              }
               return MaterialPageRoute(
-                builder: (_) => ConfirmarVolteadaScreen(
-                  loteId: args['loteId'] as String,
-                  volteadaId: (args['volteadaId'] as String?) ?? '',
-                  mensaje: (args['mensaje'] as String?) ?? '',
-                ),
+                builder: (_) => const GuiaPruebaCorteScreen(),
               );
-            } else {
+            case '/confirmar':
+              final args = settings.arguments;
+              if (args is Map && args['loteId'] is String) {
+                return MaterialPageRoute(
+                  builder: (_) => ConfirmarVolteadaScreen(
+                    loteId: args['loteId'] as String,
+                    volteadaId: (args['volteadaId'] as String?) ?? '',
+                    mensaje: (args['mensaje'] as String?) ?? '',
+                  ),
+                );
+              } else {
+                return MaterialPageRoute(
+                  builder: (_) => const Scaffold(
+                    body: Center(child: Text('Argumentos inválidos')),
+                  ),
+                );
+              }
+            default:
               return MaterialPageRoute(
                 builder: (_) => const Scaffold(
-                  body: Center(child: Text('Argumentos inválidos')),
+                  body: Center(child: Text('Ruta no encontrada')),
                 ),
               );
-            }
-          default:
-            return MaterialPageRoute(
-              builder: (_) => const Scaffold(
-                body: Center(child: Text('Ruta no encontrada')),
-              ),
-            );
-        }
-      },
+          }
+        },
+      ),
     );
   }
 }
