@@ -43,6 +43,14 @@ import 'package:alarmacacao5_0/services/consentimiento_fotos.dart';
 import 'package:alarmacacao5_0/services/location_service.dart';
 import 'package:alarmacacao5_0/services/lote_service.dart';
 import 'package:alarmacacao5_0/widgets/curva_lote_chart.dart';
+import 'package:alarmacacao5_0/data/base_conocimiento.dart';
+import 'package:alarmacacao5_0/screens/ajustes_screen.dart';
+import 'package:alarmacacao5_0/screens/ayuda_screen.dart';
+import 'package:alarmacacao5_0/screens/creditos_screen.dart';
+import 'package:alarmacacao5_0/screens/permisos_screen.dart';
+import 'package:alarmacacao5_0/screens/politica_screen.dart';
+import 'package:alarmacacao5_0/services/preferencias_app.dart';
+import 'package:alarmacacao5_0/tema_app.dart';
 
 Future<void> _cargarFuente(String familia, List<String> rutas) async {
   final loader = FontLoader(familia);
@@ -63,16 +71,29 @@ String get _sdkFuentes {
   return '$flutterRoot/bin/cache/artifacts/material_fonts';
 }
 
-Widget _app(Widget home) => MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-        fontFamilyFallback: const ['Emoji'],
-      ),
-      home: home,
-    );
+// Solo las capturas de la Fase 7 usan el tema real de la app (TemaApp) con letra y contraste elegidos.
+bool _temaReal = false;
+bool _contrasteCaptura = false;
+double _escalaCaptura = 1.0;
+
+Widget _app(Widget home) {
+  var tema = ThemeData(
+    colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
+    useMaterial3: true,
+    fontFamily: 'Roboto',
+    fontFamilyFallback: const ['Emoji'],
+  );
+  if (_temaReal) {
+    final base = TemaApp.construir(altoContraste: _contrasteCaptura);
+    tema = base.copyWith(textTheme: base.textTheme.apply(fontFamily: 'Roboto', fontFamilyFallback: const ['Emoji']));
+  }
+  return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: tema,
+    builder: (c, h) => MediaQuery(data: MediaQuery.of(c).copyWith(textScaler: TextScaler.linear(_escalaCaptura)), child: h!),
+    home: home,
+  );
+}
 
 Volteada _reg(String lote, int horas, double t, double h, String obs,
         {String etapa = Etapa.fermentacion, double? lat, double? lon, DateTime? inicio}) {
@@ -220,6 +241,13 @@ Future<void> _capturar(WidgetTester tester, Widget pantalla, String archivo,
   await expectLater(find.byType(MaterialApp), matchesGoldenFile('../docs/capturas/$archivo'));
   await tester.pumpWidget(const SizedBox()); // libera timers
   debugDisableShadows = true;
+}
+
+Future<void> _esperarCarga(WidgetTester t) async {
+  for (var i = 0; i < 6; i++) {
+    await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await t.pump(const Duration(milliseconds: 100));
+  }
 }
 
 void main() {
@@ -556,5 +584,56 @@ void main() {
     final (_, __, ___, pend) = await sembrarFotos(t);
     await _capturar(t, ResultadoFotoScreen(analisis: pend, servicio: servicioFotos(Directory.systemTemp, (m) => null)),
         'fase6/f6_en_espera.png', alto: 1100);
+  });
+
+  // ---- Fase 7: accesibilidad, privacidad, respaldo, ayuda y créditos ----------------------------------------
+  Future<void> fase7(WidgetTester t, Widget pantalla, String archivo,
+      {double alto = 915, double escala = 1.0, bool contraste = false, Future<void> Function(WidgetTester)? interaccion}) async {
+    SharedPreferences.setMockInitialValues({});
+    _temaReal = true;
+    _escalaCaptura = escala;
+    _contrasteCaptura = contraste;
+    addTearDown(() {
+      _temaReal = false;
+      _escalaCaptura = 1.0;
+      _contrasteCaptura = false;
+    });
+    await _capturar(t, pantalla, 'fase7/$archivo', alto: alto, interaccion: interaccion);
+  }
+
+  testWidgets('fase7 pregunta de ubicacion (Ley 1581)', (t) async {
+    await fase7(t, PermisosScreen(leerConsentimiento: () async => null), 'f7_consentimiento_ubicacion.png', alto: 915);
+  });
+
+  testWidgets('fase7 ajustes', (t) async {
+    PreferenciasApp.instancia = PreferenciasApp();
+    await fase7(t, AjustesScreen(preferencias: PreferenciasApp.instancia), 'f7_ajustes.png', alto: 1900, interaccion: _esperarCarga);
+  });
+
+  testWidgets('fase7 ajustes con letra muy grande y alto contraste (modo campo)', (t) async {
+    final p = PreferenciasApp(tamano: TamanoLetra.muyGrande, altoContraste: true);
+    await fase7(t, AjustesScreen(preferencias: p), 'f7_ajustes_modo_campo.png', alto: 2600, escala: 1.6, contraste: true,
+        interaccion: _esperarCarga);
+  });
+
+  testWidgets('fase7 glosario', (t) async {
+    final base = BaseConocimiento.desdeJson(File('assets/conocimiento/base.json').readAsStringSync());
+    await fase7(t, AyudaScreen(cargar: () async => base), 'f7_guia_rapida.png', alto: 915);
+  });
+
+  testWidgets('fase7 glosario pestaña', (t) async {
+    final base = BaseConocimiento.desdeJson(File('assets/conocimiento/base.json').readAsStringSync());
+    await fase7(t, AyudaScreen(cargar: () async => base), 'f7_glosario.png', alto: 1300, interaccion: (t) async {
+      await t.tap(find.text('Glosario'));
+      await t.pumpAndSettle();
+    });
+  });
+
+  testWidgets('fase7 politica de privacidad', (t) async {
+    await fase7(t, const PoliticaScreen(), 'f7_privacidad.png', alto: 1700);
+  });
+
+  testWidgets('fase7 creditos', (t) async {
+    await fase7(t, const CreditosScreen(), 'f7_creditos.png', alto: 2300);
   });
 }
