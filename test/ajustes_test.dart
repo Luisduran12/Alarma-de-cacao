@@ -267,7 +267,7 @@ void main() {
       t.view.physicalSize = const Size(360, 4000); // alta, para que la lista perezosa dibuje todo
       t.view.devicePixelRatio = 1.0;
       addTearDown(t.view.reset);
-      final base = await BaseConocimiento.desdeJson(File('assets/conocimiento/base.json').readAsStringSync());
+      final base = BaseConocimiento.desdeJson(File('assets/conocimiento/base.json').readAsStringSync());
       await t.pumpWidget(app(AyudaScreen(cargar: () async => base)));
       await t.pumpAndSettle();
       expect(find.text('Es una guía, no reemplaza al técnico.'), findsOneWidget);
